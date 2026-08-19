@@ -15,7 +15,13 @@ export type ReportSubTab =
   | 'expenses'
   | 'profit_loss';
 
-export type SaleType = 'လက်လီ' | 'လက်ကား ၁' | 'လက်ကား ၂';
+export type SaleType =
+  | 'လက်လီ'
+  | 'လက်ကား (၅ ထည်)'
+  | 'လက်ကား (၁၀ ထည်)'
+  | 'လက်ကား (၂၀ ထည်)'
+  | 'လက်ကား ၁'
+  | 'လက်ကား ၂';
 
 export type PaymentMethod = 'Cash' | 'Bank' | 'Credit';
 
@@ -27,8 +33,9 @@ export interface Product {
   unit: string;
   buyPrice: number;
   retailPrice: number;
-  wholesalePrice1: number;
-  wholesalePrice2: number;
+  wholesalePrice1: number; // လက်ကား ၅ ထည်
+  wholesalePrice2: number; // လက်ကား ၁၀ ထည်
+  wholesalePrice3?: number; // လက်ကား ၂၀ ထည်
   stockQty: number;
   minStockLevel?: number;
   store: string;

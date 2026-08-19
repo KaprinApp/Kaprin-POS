@@ -129,15 +129,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (saved) {
       try {
         const parsed: Product[] = JSON.parse(saved);
-        // Ensure default images are backfilled if missing
+        // Ensure default images and wholesalePrice3 are backfilled if missing
         return parsed.map((p) => {
-          if (!p.imageUrl) {
-            const initialMatch = initialProducts.find((ip) => ip.barcode === p.barcode);
-            if (initialMatch?.imageUrl) {
-              return { ...p, imageUrl: initialMatch.imageUrl };
-            }
-          }
-          return p;
+          const initialMatch = initialProducts.find((ip) => ip.barcode === p.barcode);
+          const imageUrl = p.imageUrl || initialMatch?.imageUrl || '';
+          const wholesalePrice3 = p.wholesalePrice3 ?? initialMatch?.wholesalePrice3 ?? (p.wholesalePrice2 ? Math.round(p.wholesalePrice2 * 0.98) : p.wholesalePrice1);
+          return { ...p, imageUrl, wholesalePrice3 };
         });
       } catch (e) {
         return initialProducts;
@@ -624,6 +621,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           retailPrice: extraProductInfo?.retailPrice || Math.round(purchase.buyPrice * 1.3),
           wholesalePrice1: extraProductInfo?.wholesalePrice1 || Math.round(purchase.buyPrice * 1.2),
           wholesalePrice2: extraProductInfo?.wholesalePrice2 || Math.round(purchase.buyPrice * 1.15),
+          wholesalePrice3: extraProductInfo?.wholesalePrice3 || Math.round(purchase.buyPrice * 1.1),
           stockQty: purchase.qty,
           minStockLevel: extraProductInfo?.minStockLevel || 5,
           store: purchase.store,

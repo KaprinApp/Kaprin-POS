@@ -58,12 +58,19 @@ export const InventoryManageView: React.FC = () => {
     retailPrice: 0,
     wholesalePrice1: 0,
     wholesalePrice2: 0,
+    wholesalePrice3: 0,
     stockQty: 0,
     minStockLevel: 5,
     store: selectedStore,
     supplier: '',
     imageUrl: '',
   });
+
+  const parseCleanNumber = (val: string): number => {
+    const cleaned = val.replace(/^0+(?=\d)/, '');
+    const num = parseFloat(cleaned);
+    return isNaN(num) ? 0 : num;
+  };
 
   // Customer Modal State
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
@@ -106,6 +113,7 @@ export const InventoryManageView: React.FC = () => {
       retailPrice: 22000,
       wholesalePrice1: 20000,
       wholesalePrice2: 19000,
+      wholesalePrice3: 18000,
       stockQty: 50,
       minStockLevel: 5,
       store: selectedStore,
@@ -126,6 +134,7 @@ export const InventoryManageView: React.FC = () => {
       retailPrice: prod.retailPrice,
       wholesalePrice1: prod.wholesalePrice1,
       wholesalePrice2: prod.wholesalePrice2,
+      wholesalePrice3: prod.wholesalePrice3 || Math.round(prod.wholesalePrice2 * 0.95),
       stockQty: prod.stockQty,
       minStockLevel: prod.minStockLevel || 5,
       store: prod.store,
@@ -442,7 +451,7 @@ export const InventoryManageView: React.FC = () => {
 
             {/* Products Table with Horizontal Scroll Wrapper */}
             <div className="overflow-x-auto border border-gray-300 rounded shadow-xs bg-white">
-              <table className="w-full text-xs text-left border-collapse min-w-[850px]">
+              <table className="w-full text-xs text-left border-collapse min-w-[900px]">
                 <thead className="bg-[#545b62] text-white font-bold">
                   <tr>
                     <th className="p-2.5 border-r border-gray-600 text-center w-10">စဉ်</th>
@@ -453,8 +462,9 @@ export const InventoryManageView: React.FC = () => {
                     <th className="p-2.5 border-r border-gray-600 text-center">Unit</th>
                     <th className="p-2.5 border-r border-gray-600 text-right">ဝယ်ဈေး</th>
                     <th className="p-2.5 border-r border-gray-600 text-right">လက်လီဈေး</th>
-                    <th className="p-2.5 border-r border-gray-600 text-right">လက်ကား ၁</th>
-                    <th className="p-2.5 border-r border-gray-600 text-right">လက်ကား ၂</th>
+                    <th className="p-2.5 border-r border-gray-600 text-right">လက်ကား ၅ထည်</th>
+                    <th className="p-2.5 border-r border-gray-600 text-right">လက်ကား ၁၀ထည်</th>
+                    <th className="p-2.5 border-r border-gray-600 text-right">လက်ကား ၂၀ထည်</th>
                     <th className="p-2.5 border-r border-gray-600 text-center">သိုလှောင်လက်ကျန် / Status</th>
                     <th className="p-2.5 text-center w-24">လုပ်ဆောင်ချက်</th>
                   </tr>
@@ -462,7 +472,7 @@ export const InventoryManageView: React.FC = () => {
                 <tbody>
                   {filteredProducts.length === 0 ? (
                     <tr>
-                      <td colSpan={12} className="p-6 text-center text-gray-500">
+                      <td colSpan={13} className="p-6 text-center text-gray-500">
                         ရှာဖွေမှုနှင့် ကိုက်ညီသော ပစ္စည်း မရှိပါ
                       </td>
                     </tr>
@@ -518,6 +528,9 @@ export const InventoryManageView: React.FC = () => {
                           </td>
                           <td className="p-2.5 border-r border-gray-200 text-right font-mono text-purple-700">
                             {p.wholesalePrice2.toLocaleString()}
+                          </td>
+                          <td className="p-2.5 border-r border-gray-200 text-right font-mono text-emerald-700 font-semibold">
+                            {(p.wholesalePrice3 || Math.round(p.wholesalePrice2 * 0.95)).toLocaleString()}
                           </td>
 
                           {/* Stock Status Badge Column */}
@@ -799,8 +812,9 @@ export const InventoryManageView: React.FC = () => {
                     type="number"
                     required
                     min="0"
-                    value={productForm.buyPrice}
-                    onChange={(e) => setProductForm({ ...productForm, buyPrice: parseFloat(e.target.value) || 0 })}
+                    value={productForm.buyPrice === 0 ? '' : productForm.buyPrice}
+                    onChange={(e) => setProductForm({ ...productForm, buyPrice: parseCleanNumber(e.target.value) })}
+                    placeholder="0"
                     className="w-full border border-gray-300 rounded p-1.5 font-mono font-bold focus:outline-none focus:border-[#ff6600]"
                   />
                 </div>
@@ -808,37 +822,52 @@ export const InventoryManageView: React.FC = () => {
 
               <div className="bg-gray-50 p-2.5 rounded-lg border border-gray-200 space-y-1.5">
                 <div className="text-[11px] font-bold text-gray-700">ပြန်လည်ရောင်းချမည့် ဈေးနှုန်းများ (Selling Prices):</div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                   <div>
                     <label className="block font-semibold mb-0.5 text-orange-700">လက်လီဈေး (Retail):</label>
                     <input
                       type="number"
                       required
                       min="0"
-                      value={productForm.retailPrice}
-                      onChange={(e) => setProductForm({ ...productForm, retailPrice: parseFloat(e.target.value) || 0 })}
+                      value={productForm.retailPrice === 0 ? '' : productForm.retailPrice}
+                      onChange={(e) => setProductForm({ ...productForm, retailPrice: parseCleanNumber(e.target.value) })}
+                      placeholder="0"
                       className="w-full border border-gray-300 rounded p-1.5 font-mono font-bold bg-white focus:outline-none focus:border-[#ff6600]"
                     />
                   </div>
                   <div>
-                    <label className="block font-semibold mb-0.5 text-blue-700">လက်ကား ၁ (5 ထည်+):</label>
+                    <label className="block font-semibold mb-0.5 text-blue-700">လက်ကား (၅ ထည်):</label>
                     <input
                       type="number"
                       required
                       min="0"
-                      value={productForm.wholesalePrice1}
-                      onChange={(e) => setProductForm({ ...productForm, wholesalePrice1: parseFloat(e.target.value) || 0 })}
+                      value={productForm.wholesalePrice1 === 0 ? '' : productForm.wholesalePrice1}
+                      onChange={(e) => setProductForm({ ...productForm, wholesalePrice1: parseCleanNumber(e.target.value) })}
+                      placeholder="0"
                       className="w-full border border-gray-300 rounded p-1.5 font-mono bg-white focus:outline-none focus:border-[#ff6600]"
                     />
                   </div>
                   <div>
-                    <label className="block font-semibold mb-0.5 text-purple-700">လက်ကား ၂ (10 ထည်+):</label>
+                    <label className="block font-semibold mb-0.5 text-purple-700">လက်ကား (၁၀ ထည်):</label>
                     <input
                       type="number"
                       required
                       min="0"
-                      value={productForm.wholesalePrice2}
-                      onChange={(e) => setProductForm({ ...productForm, wholesalePrice2: parseFloat(e.target.value) || 0 })}
+                      value={productForm.wholesalePrice2 === 0 ? '' : productForm.wholesalePrice2}
+                      onChange={(e) => setProductForm({ ...productForm, wholesalePrice2: parseCleanNumber(e.target.value) })}
+                      placeholder="0"
+                      className="w-full border border-gray-300 rounded p-1.5 font-mono bg-white focus:outline-none focus:border-[#ff6600]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold mb-0.5 text-emerald-700">လက်ကား (၂၀ ထည်):</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={productForm.wholesalePrice3 === 0 ? '' : (productForm.wholesalePrice3 || '')}
+                      onChange={(e) => setProductForm({ ...productForm, wholesalePrice3: parseCleanNumber(e.target.value) })}
+                      placeholder="0"
                       className="w-full border border-gray-300 rounded p-1.5 font-mono bg-white focus:outline-none focus:border-[#ff6600]"
                     />
                   </div>
@@ -852,8 +881,9 @@ export const InventoryManageView: React.FC = () => {
                     type="number"
                     required
                     min="0"
-                    value={productForm.stockQty}
-                    onChange={(e) => setProductForm({ ...productForm, stockQty: parseFloat(e.target.value) || 0 })}
+                    value={productForm.stockQty === 0 ? '' : productForm.stockQty}
+                    onChange={(e) => setProductForm({ ...productForm, stockQty: parseCleanNumber(e.target.value) })}
+                    placeholder="0"
                     className="w-full border border-gray-300 rounded p-1.5 font-mono font-bold focus:outline-none focus:border-[#ff6600]"
                   />
                 </div>
@@ -863,8 +893,9 @@ export const InventoryManageView: React.FC = () => {
                     type="number"
                     required
                     min="0"
-                    value={productForm.minStockLevel || 5}
-                    onChange={(e) => setProductForm({ ...productForm, minStockLevel: parseFloat(e.target.value) || 0 })}
+                    value={productForm.minStockLevel === 0 ? '' : (productForm.minStockLevel || '')}
+                    onChange={(e) => setProductForm({ ...productForm, minStockLevel: parseCleanNumber(e.target.value) })}
+                    placeholder="5"
                     className="w-full border border-amber-300 bg-amber-50/50 rounded p-1.5 font-mono font-bold focus:outline-none focus:border-amber-600"
                   />
                 </div>
@@ -960,8 +991,9 @@ export const InventoryManageView: React.FC = () => {
                   <input
                     type="number"
                     min="0"
-                    value={customerForm.creditBalance}
-                    onChange={(e) => setCustomerForm({ ...customerForm, creditBalance: parseFloat(e.target.value) || 0 })}
+                    value={customerForm.creditBalance === 0 ? '' : customerForm.creditBalance}
+                    onChange={(e) => setCustomerForm({ ...customerForm, creditBalance: parseCleanNumber(e.target.value) })}
+                    placeholder="0"
                     className="w-full border border-gray-300 rounded p-2 font-mono font-bold"
                   />
                 </div>
@@ -970,8 +1002,9 @@ export const InventoryManageView: React.FC = () => {
                   <input
                     type="number"
                     min="0"
-                    value={customerForm.bonusPoints}
-                    onChange={(e) => setCustomerForm({ ...customerForm, bonusPoints: parseInt(e.target.value) || 0 })}
+                    value={customerForm.bonusPoints === 0 ? '' : customerForm.bonusPoints}
+                    onChange={(e) => setCustomerForm({ ...customerForm, bonusPoints: Math.round(parseCleanNumber(e.target.value)) })}
+                    placeholder="0"
                     className="w-full border border-gray-300 rounded p-2 font-mono font-bold text-[#ff6600]"
                   />
                 </div>
@@ -1050,8 +1083,9 @@ export const InventoryManageView: React.FC = () => {
                 <input
                   type="number"
                   min="0"
-                  value={supplierForm.debtBalance}
-                  onChange={(e) => setSupplierForm({ ...supplierForm, debtBalance: parseFloat(e.target.value) || 0 })}
+                  value={supplierForm.debtBalance === 0 ? '' : supplierForm.debtBalance}
+                  onChange={(e) => setSupplierForm({ ...supplierForm, debtBalance: parseCleanNumber(e.target.value) })}
+                  placeholder="0"
                   className="w-full border border-gray-300 rounded p-2 font-mono font-bold text-red-600"
                 />
               </div>

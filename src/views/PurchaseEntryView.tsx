@@ -39,6 +39,7 @@ export const PurchaseEntryView: React.FC = () => {
   const [retailPrice, setRetailPrice] = useState<number>(26000);
   const [wholesalePrice1, setWholesalePrice1] = useState<number>(25000);
   const [wholesalePrice2, setWholesalePrice2] = useState<number>(24000);
+  const [wholesalePrice3, setWholesalePrice3] = useState<number>(23000);
   const [supplier, setSupplier] = useState(suppliers[0]?.name || 'Royal Supply');
   const [customSupplier, setCustomSupplier] = useState('');
   const [imageUrl, setImageUrl] = useState<string>('');
@@ -48,6 +49,13 @@ export const PurchaseEntryView: React.FC = () => {
 
   const commonCategories = ['SHIRT', 'Tshirt', 'card', 'PANTS', 'ACCESSORIES', 'FOOTWEAR', 'COSMETICS', 'FOOD', 'DRINK'];
   const commonUnits = ['ထည်', 'ခု', 'ဘူး', 'ထုပ်', 'လုံး', 'တွဲ', 'ကတ်', 'ဖာ', 'ဒါဇင်', 'card'];
+
+  // Helper to remove annoying leading zero (e.g. typing 10 when 0 was in input becoming 010)
+  const parseCleanNumber = (valStr: string): number => {
+    const cleaned = valStr.replace(/^0+(?=\d)/, '');
+    const parsed = parseFloat(cleaned);
+    return isNaN(parsed) ? 0 : parsed;
+  };
 
   const handleProductSelect = (selectedBarcode: string) => {
     if (!selectedBarcode) {
@@ -66,8 +74,9 @@ export const PurchaseEntryView: React.FC = () => {
       setUnit(matched.unit);
       setBuyPrice(matched.buyPrice);
       setRetailPrice(matched.retailPrice || Math.round(matched.buyPrice * 1.3));
-      setWholesalePrice1(matched.wholesalePrice1 || Math.round(matched.buyPrice * 1.2));
-      setWholesalePrice2(matched.wholesalePrice2 || Math.round(matched.buyPrice * 1.15));
+      setWholesalePrice1(matched.wholesalePrice1 || Math.round(matched.buyPrice * 1.25));
+      setWholesalePrice2(matched.wholesalePrice2 || Math.round(matched.buyPrice * 1.2));
+      setWholesalePrice3(matched.wholesalePrice3 || Math.round(matched.buyPrice * 1.15));
       setSupplier(matched.supplier || suppliers[0]?.name || '');
       setImageUrl(matched.imageUrl || '');
       setEntryMode('existing');
@@ -76,15 +85,18 @@ export const PurchaseEntryView: React.FC = () => {
 
   const handleBuyPriceChange = (newBuyPrice: number) => {
     setBuyPrice(newBuyPrice);
-    // Suggest retail price if user hasn't explicitly customized
+    // Suggest retail and wholesale prices if user hasn't explicitly customized
     if (retailPrice === 0 || retailPrice === Math.round(buyPrice * 1.3)) {
       setRetailPrice(Math.round(newBuyPrice * 1.3));
     }
-    if (wholesalePrice1 === 0 || wholesalePrice1 === Math.round(buyPrice * 1.2)) {
-      setWholesalePrice1(Math.round(newBuyPrice * 1.2));
+    if (wholesalePrice1 === 0 || wholesalePrice1 === Math.round(buyPrice * 1.25)) {
+      setWholesalePrice1(Math.round(newBuyPrice * 1.25));
     }
-    if (wholesalePrice2 === 0 || wholesalePrice2 === Math.round(buyPrice * 1.15)) {
-      setWholesalePrice2(Math.round(newBuyPrice * 1.15));
+    if (wholesalePrice2 === 0 || wholesalePrice2 === Math.round(buyPrice * 1.2)) {
+      setWholesalePrice2(Math.round(newBuyPrice * 1.2));
+    }
+    if (wholesalePrice3 === 0 || wholesalePrice3 === Math.round(buyPrice * 1.15)) {
+      setWholesalePrice3(Math.round(newBuyPrice * 1.15));
     }
   };
 
@@ -98,6 +110,7 @@ export const PurchaseEntryView: React.FC = () => {
     setRetailPrice(26000);
     setWholesalePrice1(25000);
     setWholesalePrice2(24000);
+    setWholesalePrice3(23000);
     setImageUrl('');
     setEntryMode('new_custom');
   };
@@ -134,8 +147,9 @@ export const PurchaseEntryView: React.FC = () => {
       },
       {
         retailPrice: retailPrice || Math.round(buyPrice * 1.3),
-        wholesalePrice1: wholesalePrice1 || Math.round(buyPrice * 1.2),
-        wholesalePrice2: wholesalePrice2 || Math.round(buyPrice * 1.15),
+        wholesalePrice1: wholesalePrice1 || Math.round(buyPrice * 1.25),
+        wholesalePrice2: wholesalePrice2 || Math.round(buyPrice * 1.2),
+        wholesalePrice3: wholesalePrice3 || Math.round(buyPrice * 1.15),
         imageUrl: imageUrl.trim() || undefined,
         supplier: finalSupplier,
       }
@@ -315,8 +329,10 @@ export const PurchaseEntryView: React.FC = () => {
                   type="number"
                   required
                   min="1"
-                  value={qty}
-                  onChange={(e) => setQty(parseFloat(e.target.value) || 0)}
+                  value={qty === 0 ? '' : qty}
+                  onChange={(e) => setQty(parseCleanNumber(e.target.value))}
+                  onBlur={() => { if (!qty || qty < 1) setQty(1); }}
+                  placeholder="အရေအတွက်..."
                   className="w-full bg-white border border-gray-300 rounded-lg p-2 font-mono font-bold text-gray-900 focus:outline-none focus:border-[#ff6600]"
                 />
               </div>
@@ -373,8 +389,8 @@ export const PurchaseEntryView: React.FC = () => {
                 type="number"
                 required
                 min="0"
-                value={buyPrice}
-                onChange={(e) => handleBuyPriceChange(parseFloat(e.target.value) || 0)}
+                value={buyPrice === 0 ? '' : buyPrice}
+                onChange={(e) => handleBuyPriceChange(parseCleanNumber(e.target.value))}
                 placeholder="ဝယ်ရင်းဈေး..."
                 className="w-full bg-white border border-gray-300 rounded-lg p-2 font-mono font-bold text-gray-900 focus:outline-none focus:border-[#ff6600]"
               />
@@ -391,41 +407,52 @@ export const PurchaseEntryView: React.FC = () => {
             </div>
           </div>
 
-          {/* Selling Price Fields (လက်လီရောင်းဈေး / လက်ကားဈေးများ) */}
+          {/* Selling Price Fields (လက်လီရောင်းဈေး / လက်ကား ၅ထည် / ၁၀ထည် / ၂၀ထည်) */}
           <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl space-y-2">
-            <span className="font-bold text-gray-800 block text-[11px] text-gray-700">
+            <span className="font-bold text-gray-800 block text-[11px]">
               အရောင်းဈေးနှုန်းများ သတ်မှတ်ရန် (Selling Prices):
             </span>
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
               <div>
-                <label className="block text-[10px] text-gray-500 mb-0.5">လက်လီရောင်းဈေး:</label>
+                <label className="block text-[10px] text-orange-700 font-bold mb-0.5">လက်လီရောင်းဈေး:</label>
                 <input
                   type="number"
-                  value={retailPrice || ''}
-                  onChange={(e) => setRetailPrice(parseFloat(e.target.value) || 0)}
+                  value={retailPrice === 0 ? '' : retailPrice}
+                  onChange={(e) => setRetailPrice(parseCleanNumber(e.target.value))}
                   placeholder="26000"
                   className="w-full bg-white border border-gray-300 rounded p-1.5 font-mono text-xs font-semibold focus:outline-none focus:border-[#ff6600]"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] text-gray-500 mb-0.5">လက်ကား ၁:</label>
+                <label className="block text-[10px] text-blue-700 font-bold mb-0.5">လက်ကား (၅ ထည်):</label>
                 <input
                   type="number"
-                  value={wholesalePrice1 || ''}
-                  onChange={(e) => setWholesalePrice1(parseFloat(e.target.value) || 0)}
+                  value={wholesalePrice1 === 0 ? '' : wholesalePrice1}
+                  onChange={(e) => setWholesalePrice1(parseCleanNumber(e.target.value))}
                   placeholder="25000"
                   className="w-full bg-white border border-gray-300 rounded p-1.5 font-mono text-xs font-semibold focus:outline-none focus:border-[#ff6600]"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] text-gray-500 mb-0.5">လက်ကား ၂:</label>
+                <label className="block text-[10px] text-purple-700 font-bold mb-0.5">လက်ကား (၁၀ ထည်):</label>
                 <input
                   type="number"
-                  value={wholesalePrice2 || ''}
-                  onChange={(e) => setWholesalePrice2(parseFloat(e.target.value) || 0)}
+                  value={wholesalePrice2 === 0 ? '' : wholesalePrice2}
+                  onChange={(e) => setWholesalePrice2(parseCleanNumber(e.target.value))}
                   placeholder="24000"
+                  className="w-full bg-white border border-gray-300 rounded p-1.5 font-mono text-xs font-semibold focus:outline-none focus:border-[#ff6600]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] text-emerald-700 font-bold mb-0.5">လက်ကား (၂၀ ထည်):</label>
+                <input
+                  type="number"
+                  value={wholesalePrice3 === 0 ? '' : wholesalePrice3}
+                  onChange={(e) => setWholesalePrice3(parseCleanNumber(e.target.value))}
+                  placeholder="23000"
                   className="w-full bg-white border border-gray-300 rounded p-1.5 font-mono text-xs font-semibold focus:outline-none focus:border-[#ff6600]"
                 />
               </div>

@@ -98,8 +98,9 @@ export const SalesPOSView: React.FC = () => {
     qtyToAdd: number = 1
   ) => {
     let unitPrice = product.retailPrice;
-    if (priceType === 'လက်ကား ၁') unitPrice = product.wholesalePrice1;
-    if (priceType === 'လက်ကား ၂') unitPrice = product.wholesalePrice2;
+    if (priceType === 'လက်ကား (၅ ထည်)' || priceType === 'လက်ကား ၁') unitPrice = product.wholesalePrice1;
+    if (priceType === 'လက်ကား (၁၀ ထည်)' || priceType === 'လက်ကား ၂') unitPrice = product.wholesalePrice2;
+    if (priceType === 'လက်ကား (၂၀ ထည်)') unitPrice = product.wholesalePrice3 || Math.round(product.wholesalePrice2 * 0.95);
 
     setCart((prev) => {
       const existingIdx = prev.findIndex(
@@ -183,8 +184,9 @@ export const SalesPOSView: React.FC = () => {
       const updated = [...prev];
       const prod = updated[idx].product;
       let price = prod.retailPrice;
-      if (type === 'လက်ကား ၁') price = prod.wholesalePrice1;
-      if (type === 'လက်ကား ၂') price = prod.wholesalePrice2;
+      if (type === 'လက်ကား (၅ ထည်)' || type === 'လက်ကား ၁') price = prod.wholesalePrice1;
+      if (type === 'လက်ကား (၁၀ ထည်)' || type === 'လက်ကား ၂') price = prod.wholesalePrice2;
+      if (type === 'လက်ကား (၂၀ ထည်)') price = prod.wholesalePrice3 || Math.round(prod.wholesalePrice2 * 0.95);
 
       updated[idx] = {
         ...updated[idx],
@@ -531,25 +533,30 @@ export const SalesPOSView: React.FC = () => {
                   {/* Prices Overview */}
                   <div className="mt-2 space-y-1">
                     <div className="flex items-baseline justify-between">
-                      <div className="text-[10px] text-gray-500 font-medium">လက်လီဈေး:</div>
+                      <div className="text-[10px] text-gray-500 font-medium">လက်လီ:</div>
                       <div className="font-bold text-xs sm:text-sm text-gray-900 font-mono">
                         {prod.retailPrice.toLocaleString()} Ks
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between text-[10px] text-blue-700 bg-blue-50/70 px-1.5 py-0.5 rounded">
-                      <span>လက်ကား ၁ (5 ထည်+):</span>
+                      <span>လက်ကား ၅ထည်:</span>
                       <span className="font-mono font-bold">{prod.wholesalePrice1.toLocaleString()} Ks</span>
                     </div>
 
                     <div className="flex items-center justify-between text-[10px] text-purple-700 bg-purple-50/70 px-1.5 py-0.5 rounded">
-                      <span>လက်ကား ၂ (10 ထည်+):</span>
+                      <span>လက်ကား ၁၀ထည်:</span>
                       <span className="font-mono font-bold">{prod.wholesalePrice2.toLocaleString()} Ks</span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10px] text-emerald-700 bg-emerald-50/70 px-1.5 py-0.5 rounded">
+                      <span>လက်ကား ၂၀ထည်:</span>
+                      <span className="font-mono font-bold">{(prod.wholesalePrice3 || Math.round(prod.wholesalePrice2 * 0.95)).toLocaleString()} Ks</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Direct Action Buttons on Card (Retail & Wholesale 5/10 pcs) */}
+                {/* Direct Action Buttons on Card (Retail & Wholesale 5/10/20 pcs) */}
                 <div className="mt-2.5 pt-2 border-t border-gray-100 space-y-1.5">
                   <div className="grid grid-cols-2 gap-1">
                     <button
@@ -571,22 +578,30 @@ export const SalesPOSView: React.FC = () => {
                     </button>
                   </div>
 
-                  {/* Quick Wholesale 5 / 10 Add Buttons */}
-                  <div className="grid grid-cols-2 gap-1">
+                  {/* Quick Wholesale 5 / 10 / 20 Add Buttons */}
+                  <div className="grid grid-cols-3 gap-1">
                     <button
-                      onClick={() => handleAddToCart(prod, 'လက်ကား ၁', 5)}
-                      className="py-1 px-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[10px] rounded-lg flex items-center justify-center space-x-0.5 cursor-pointer transition-colors active:scale-95 border border-blue-200"
-                      title="လက်ကား ၁ ဈေးဖြင့် ၅ ထည် ထည့်မည်"
+                      onClick={() => handleAddToCart(prod, 'လက်ကား (၅ ထည်)', 5)}
+                      className="py-1 px-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[9px] rounded-lg flex items-center justify-center cursor-pointer transition-colors active:scale-95 border border-blue-200"
+                      title="လက်ကား ၅ ထည် ထည့်မည်"
                     >
-                      <span>+5 ထည် (ကား၁)</span>
+                      <span>+5 ထည်</span>
                     </button>
 
                     <button
-                      onClick={() => handleAddToCart(prod, 'လက်ကား ၂', 10)}
-                      className="py-1 px-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-[10px] rounded-lg flex items-center justify-center space-x-0.5 cursor-pointer transition-colors active:scale-95 border border-purple-200"
-                      title="လက်ကား ၂ ဈေးဖြင့် ၁၀ ထည် ထည့်မည်"
+                      onClick={() => handleAddToCart(prod, 'လက်ကား (၁၀ ထည်)', 10)}
+                      className="py-1 px-1 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-[9px] rounded-lg flex items-center justify-center cursor-pointer transition-colors active:scale-95 border border-purple-200"
+                      title="လက်ကား ၁၀ ထည် ထည့်မည်"
                     >
-                      <span>+10 ထည် (ကား၂)</span>
+                      <span>+10 ထည်</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleAddToCart(prod, 'လက်ကား (၂၀ ထည်)', 20)}
+                      className="py-1 px-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[9px] rounded-lg flex items-center justify-center cursor-pointer transition-colors active:scale-95 border border-emerald-200"
+                      title="လက်ကား ၂၀ ထည် ထည့်မည်"
+                    >
+                      <span>+20 ထည်</span>
                     </button>
                   </div>
                 </div>
@@ -748,8 +763,11 @@ export const SalesPOSView: React.FC = () => {
                         className="bg-gray-50 border border-gray-300 rounded px-1.5 py-0.5 text-gray-800 text-[11px] font-semibold focus:outline-none"
                       >
                         <option value="လက်လီ">လက်လီ ({item.product.retailPrice.toLocaleString()})</option>
-                        <option value="လက်ကား ၁">လက်ကား ၁ ({item.product.wholesalePrice1.toLocaleString()})</option>
-                        <option value="လက်ကား ၂">လက်ကား ၂ ({item.product.wholesalePrice2.toLocaleString()})</option>
+                        <option value="လက်ကား (၅ ထည်)">လက်ကား ၅ထည် ({item.product.wholesalePrice1.toLocaleString()})</option>
+                        <option value="လက်ကား (၁၀ ထည်)">လက်ကား ၁၀ထည် ({item.product.wholesalePrice2.toLocaleString()})</option>
+                        <option value="လက်ကား (၂၀ ထည်)">
+                          လက်ကား ၂၀ထည် ({(item.product.wholesalePrice3 || Math.round(item.product.wholesalePrice2 * 0.95)).toLocaleString()})
+                        </option>
                       </select>
                     </div>
                     <span className="font-mono font-bold text-gray-900">
@@ -758,13 +776,24 @@ export const SalesPOSView: React.FC = () => {
                   </div>
 
                   {/* Smart Wholesale Suggestion Chip if Qty matches wholesale thresholds */}
-                  {item.qty >= 10 && item.selectedPriceType !== 'လက်ကား ၂' && (
+                  {item.qty >= 20 && item.selectedPriceType !== 'လက်ကား (၂၀ ထည်)' && (
                     <button
                       type="button"
-                      onClick={() => updatePriceType(idx, 'လက်ကား ၂')}
+                      onClick={() => updatePriceType(idx, 'လက်ကား (၂၀ ထည်)')}
+                      className="w-full text-[10px] bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold py-1 px-2 rounded-md flex items-center justify-between cursor-pointer transition-colors"
+                    >
+                      <span>💡 ၂၀ ထည် ပြည့်ပါပြီ - "လက်ကား ၂၀ထည်" ဈေး သို့ ပြောင်းမည်</span>
+                      <span className="underline">ပြောင်းရန် နှိပ်ပါ</span>
+                    </button>
+                  )}
+
+                  {item.qty >= 10 && item.qty < 20 && item.selectedPriceType !== 'လက်ကား (၁၀ ထည်)' && item.selectedPriceType !== 'လက်ကား (၂၀ ထည်)' && (
+                    <button
+                      type="button"
+                      onClick={() => updatePriceType(idx, 'လက်ကား (၁၀ ထည်)')}
                       className="w-full text-[10px] bg-purple-100 hover:bg-purple-200 text-purple-900 font-bold py-1 px-2 rounded-md flex items-center justify-between cursor-pointer transition-colors"
                     >
-                      <span>💡 ၁၀ ထည် ပြည့်ပါပြီ - "လက်ကား ၂" ဈေး သို့ ပြောင်းမည်</span>
+                      <span>💡 ၁၀ ထည် ပြည့်ပါပြီ - "လက်ကား ၁၀ထည်" ဈေး သို့ ပြောင်းမည်</span>
                       <span className="underline">ပြောင်းရန် နှိပ်ပါ</span>
                     </button>
                   )}
@@ -772,10 +801,10 @@ export const SalesPOSView: React.FC = () => {
                   {item.qty >= 5 && item.qty < 10 && item.selectedPriceType === 'လက်လီ' && (
                     <button
                       type="button"
-                      onClick={() => updatePriceType(idx, 'လက်ကား ၁')}
+                      onClick={() => updatePriceType(idx, 'လက်ကား (၅ ထည်)')}
                       className="w-full text-[10px] bg-blue-100 hover:bg-blue-200 text-blue-900 font-bold py-1 px-2 rounded-md flex items-center justify-between cursor-pointer transition-colors"
                     >
-                      <span>💡 ၅ ထည် ပြည့်ပါပြီ - "လက်ကား ၁" ဈေး သို့ ပြောင်းမည်</span>
+                      <span>💡 ၅ ထည် ပြည့်ပါပြီ - "လက်ကား ၅ထည်" ဈေး သို့ ပြောင်းမည်</span>
                       <span className="underline">ပြောင်းရန် နှိပ်ပါ</span>
                     </button>
                   )}
@@ -783,7 +812,7 @@ export const SalesPOSView: React.FC = () => {
 
                 {/* Qty & Steppers & Discount & Subtotal */}
                 <div className="flex items-center justify-between pt-1 border-t border-gray-200">
-                  {/* Qty Controls with +5, +10 quick buttons */}
+                  {/* Qty Controls with +5, +10, +20 quick buttons */}
                   <div className="flex items-center space-x-1">
                     <div className="flex items-center bg-white border border-gray-300 rounded-lg p-0.5 shadow-2xs">
                       <button
@@ -796,8 +825,14 @@ export const SalesPOSView: React.FC = () => {
                       <input
                         type="number"
                         min="1"
-                        value={item.qty}
-                        onChange={(e) => updateCartQty(idx, parseFloat(e.target.value) || 1)}
+                        value={item.qty === 0 ? '' : item.qty}
+                        onChange={(e) => {
+                          const cleaned = e.target.value.replace(/^0+(?=\d)/, '');
+                          updateCartQty(idx, parseFloat(cleaned) || 0);
+                        }}
+                        onBlur={() => {
+                          if (!item.qty || item.qty < 1) updateCartQty(idx, 1);
+                        }}
                         className="w-10 text-center font-mono font-bold text-xs bg-transparent focus:outline-none"
                         title="အရေအတွက် စိတ်ကြိုက်ပြင်ရေးရန်"
                       />
@@ -826,6 +861,14 @@ export const SalesPOSView: React.FC = () => {
                       title="၁၀ ထည် ပေါင်းထည့်မည်"
                     >
                       +10
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateCartQty(idx, item.qty + 20)}
+                      className="px-1.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[10px] rounded border border-emerald-200 cursor-pointer"
+                      title="၂၀ ထည် ပေါင်းထည့်မည်"
+                    >
+                      +20
                     </button>
                   </div>
 
