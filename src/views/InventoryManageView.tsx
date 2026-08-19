@@ -19,9 +19,11 @@ import {
   DollarSign,
   ArrowRight,
   Filter,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Product, Customer, Supplier, StaffUser } from '../types';
+import { ProductImagePicker } from '../components/ProductImagePicker';
 
 export const InventoryManageView: React.FC = () => {
   const {
@@ -60,6 +62,7 @@ export const InventoryManageView: React.FC = () => {
     minStockLevel: 5,
     store: selectedStore,
     supplier: '',
+    imageUrl: '',
   });
 
   // Customer Modal State
@@ -107,6 +110,7 @@ export const InventoryManageView: React.FC = () => {
       minStockLevel: 5,
       store: selectedStore,
       supplier: suppliers[0]?.name || '',
+      imageUrl: '',
     });
     setIsProductModalOpen(true);
   };
@@ -126,6 +130,7 @@ export const InventoryManageView: React.FC = () => {
       minStockLevel: prod.minStockLevel || 5,
       store: prod.store,
       supplier: prod.supplier,
+      imageUrl: prod.imageUrl || '',
     });
     setIsProductModalOpen(true);
   };
@@ -441,6 +446,7 @@ export const InventoryManageView: React.FC = () => {
                 <thead className="bg-[#545b62] text-white font-bold">
                   <tr>
                     <th className="p-2.5 border-r border-gray-600 text-center w-10">စဉ်</th>
+                    <th className="p-2.5 border-r border-gray-600 text-center w-12">ပုံ</th>
                     <th className="p-2.5 border-r border-gray-600">Barcode</th>
                     <th className="p-2.5 border-r border-gray-600">အမည်</th>
                     <th className="p-2.5 border-r border-gray-600">အမျိုးအစား</th>
@@ -456,7 +462,7 @@ export const InventoryManageView: React.FC = () => {
                 <tbody>
                   {filteredProducts.length === 0 ? (
                     <tr>
-                      <td colSpan={11} className="p-6 text-center text-gray-500">
+                      <td colSpan={12} className="p-6 text-center text-gray-500">
                         ရှာဖွေမှုနှင့် ကိုက်ညီသော ပစ္စည်း မရှိပါ
                       </td>
                     </tr>
@@ -480,6 +486,20 @@ export const InventoryManageView: React.FC = () => {
                           }`}
                         >
                           <td className="p-2.5 border-r border-gray-200 text-center text-gray-500">{idx + 1}</td>
+                          <td className="p-1.5 border-r border-gray-200 text-center">
+                            <div className="w-9 h-9 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden mx-auto flex items-center justify-center">
+                              {p.imageUrl ? (
+                                <img
+                                  src={p.imageUrl}
+                                  alt={p.name}
+                                  className="w-full h-full object-cover"
+                                  referrerPolicy="no-referrer"
+                                />
+                              ) : (
+                                <ImageIcon className="w-4 h-4 text-gray-400" />
+                              )}
+                            </div>
+                          </td>
                           <td className="p-2.5 border-r border-gray-200 font-mono font-bold text-gray-900">{p.barcode}</td>
                           <td className="p-2.5 border-r border-gray-200 font-semibold text-gray-900">
                             <div>{p.name}</div>
@@ -751,6 +771,15 @@ export const InventoryManageView: React.FC = () => {
                 />
               </div>
 
+              {/* Product Image Picker */}
+              <div className="p-2.5 bg-gray-50 border border-gray-200 rounded-lg">
+                <ProductImagePicker
+                  imageUrl={productForm.imageUrl}
+                  onChange={(url) => setProductForm({ ...productForm, imageUrl: url })}
+                  category={productForm.category}
+                />
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
                   <label className="block font-semibold mb-0.5">ယူနစ် (Unit):</label>
@@ -763,7 +792,9 @@ export const InventoryManageView: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold mb-0.5">ဝယ်ရင်းဈေး (Buy Price):</label>
+                  <label className="block font-semibold mb-0.5 text-gray-900">
+                    ဝယ်ရင်းဈေး / လက်ကားဝယ်ဈေး (Unit Buy Price):
+                  </label>
                   <input
                     type="number"
                     required
@@ -775,39 +806,42 @@ export const InventoryManageView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-gray-50 p-2.5 rounded border border-gray-200">
-                <div>
-                  <label className="block font-semibold mb-0.5 text-orange-700">လက်လီဈေး:</label>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    value={productForm.retailPrice}
-                    onChange={(e) => setProductForm({ ...productForm, retailPrice: parseFloat(e.target.value) || 0 })}
-                    className="w-full border border-gray-300 rounded p-1.5 font-mono font-bold bg-white focus:outline-none focus:border-[#ff6600]"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold mb-0.5 text-blue-700">လက်ကား ၁:</label>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    value={productForm.wholesalePrice1}
-                    onChange={(e) => setProductForm({ ...productForm, wholesalePrice1: parseFloat(e.target.value) || 0 })}
-                    className="w-full border border-gray-300 rounded p-1.5 font-mono bg-white focus:outline-none focus:border-[#ff6600]"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold mb-0.5 text-purple-700">လက်ကား ၂:</label>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    value={productForm.wholesalePrice2}
-                    onChange={(e) => setProductForm({ ...productForm, wholesalePrice2: parseFloat(e.target.value) || 0 })}
-                    className="w-full border border-gray-300 rounded p-1.5 font-mono bg-white focus:outline-none focus:border-[#ff6600]"
-                  />
+              <div className="bg-gray-50 p-2.5 rounded-lg border border-gray-200 space-y-1.5">
+                <div className="text-[11px] font-bold text-gray-700">ပြန်လည်ရောင်းချမည့် ဈေးနှုန်းများ (Selling Prices):</div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div>
+                    <label className="block font-semibold mb-0.5 text-orange-700">လက်လီဈေး (Retail):</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={productForm.retailPrice}
+                      onChange={(e) => setProductForm({ ...productForm, retailPrice: parseFloat(e.target.value) || 0 })}
+                      className="w-full border border-gray-300 rounded p-1.5 font-mono font-bold bg-white focus:outline-none focus:border-[#ff6600]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold mb-0.5 text-blue-700">လက်ကား ၁ (5 ထည်+):</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={productForm.wholesalePrice1}
+                      onChange={(e) => setProductForm({ ...productForm, wholesalePrice1: parseFloat(e.target.value) || 0 })}
+                      className="w-full border border-gray-300 rounded p-1.5 font-mono bg-white focus:outline-none focus:border-[#ff6600]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold mb-0.5 text-purple-700">လက်ကား ၂ (10 ထည်+):</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={productForm.wholesalePrice2}
+                      onChange={(e) => setProductForm({ ...productForm, wholesalePrice2: parseFloat(e.target.value) || 0 })}
+                      className="w-full border border-gray-300 rounded p-1.5 font-mono bg-white focus:outline-none focus:border-[#ff6600]"
+                    />
+                  </div>
                 </div>
               </div>
 

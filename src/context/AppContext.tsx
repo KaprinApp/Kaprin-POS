@@ -66,7 +66,7 @@ interface AppContextType {
   deleteProduct: (id: string) => void;
   addSaleRecord: (sale: Omit<SaleRecord, 'id'>) => void;
   addMultipleSaleRecords: (records: Omit<SaleRecord, 'id'>[]) => void;
-  addPurchaseRecord: (purchase: Omit<PurchaseRecord, 'id'>) => void;
+  addPurchaseRecord: (purchase: Omit<PurchaseRecord, 'id'>, extraProductInfo?: Partial<Product>) => void;
   addIncomeRecord: (income: Omit<IncomeRecord, 'id'>) => void;
   addExpenseRecord: (expense: Omit<ExpenseRecord, 'id'>) => void;
   addCustomer: (cust: Omit<Customer, 'id'>) => void;
@@ -126,7 +126,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Storage initialization
   const [products, setProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem('pos_products');
-    return saved ? JSON.parse(saved) : initialProducts;
+    if (saved) {
+      try {
+        const parsed: Product[] = JSON.parse(saved);
+        // Ensure default images are backfilled if missing
+        return parsed.map((p) => {
+          if (!p.imageUrl) {
+            const initialMatch = initialProducts.find((ip) => ip.barcode === p.barcode);
+            if (initialMatch?.imageUrl) {
+              return { ...p, imageUrl: initialMatch.imageUrl };
+            }
+          }
+          return p;
+        });
+      } catch (e) {
+        return initialProducts;
+      }
+    }
+    return initialProducts;
   });
 
   const [sales, setSales] = useState<SaleRecord[]>(() => {
@@ -569,26 +586,53 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const addPurchaseRecord = (purchase: Omit<PurchaseRecord, 'id'>) => {
+  const addPurchaseRecord = (
+    purchase: Omit<PurchaseRecord, 'id'>,
+    extraProductInfo?: Partial<Product>
+  ) => {
     const newPurchase: PurchaseRecord = {
       ...purchase,
       id: 'pur-' + Date.now(),
     };
-    setPurchases(prev => [...prev, newPurchase]);
+    setPurchases(prev => [newPurchase, ...prev]);
 
-    // Increase stock
-    setProducts(prev =>
-      prev.map(p => {
-        if (p.barcode === purchase.barcode) {
-          return {
-            ...p,
-            stockQty: p.stockQty + purchase.qty,
-            buyPrice: purchase.buyPrice,
-          };
-        }
-        return p;
-      })
-    );
+    // Increase stock or create product if not exists
+    setProducts(prev => {
+      const idx = prev.findIndex(p => p.barcode === purchase.barcode);
+      if (idx !== -1) {
+        const updated = [...prev];
+        updated[idx] = {
+          ...updated[idx],
+          name: purchase.itemName || updated[idx].name,
+          category: purchase.category || updated[idx].category,
+          unit: purchase.unit || updated[idx].unit,
+          supplier: purchase.supplier || updated[idx].supplier,
+          stockQty: updated[idx].stockQty + purchase.qty,
+          buyPrice: purchase.buyPrice,
+          ...(extraProductInfo || {}),
+        };
+        return updated;
+      } else {
+        // Create new product
+        const newProduct: Product = {
+          id: 'prod-' + Date.now(),
+          barcode: purchase.barcode,
+          name: purchase.itemName,
+          category: purchase.category || 'SHIRT',
+          unit: purchase.unit || 'ထည်',
+          buyPrice: purchase.buyPrice,
+          retailPrice: extraProductInfo?.retailPrice || Math.round(purchase.buyPrice * 1.3),
+          wholesalePrice1: extraProductInfo?.wholesalePrice1 || Math.round(purchase.buyPrice * 1.2),
+          wholesalePrice2: extraProductInfo?.wholesalePrice2 || Math.round(purchase.buyPrice * 1.15),
+          stockQty: purchase.qty,
+          minStockLevel: extraProductInfo?.minStockLevel || 5,
+          store: purchase.store,
+          supplier: purchase.supplier,
+          imageUrl: extraProductInfo?.imageUrl || '',
+        };
+        return [newProduct, ...prev];
+      }
+    });
   };
 
   const addIncomeRecord = (income: Omit<IncomeRecord, 'id'>) => {

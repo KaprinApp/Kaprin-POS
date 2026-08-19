@@ -33,6 +33,7 @@ export interface Product {
   minStockLevel?: number;
   store: string;
   supplier: string;
+  imageUrl?: string;
 }
 
 export interface SaleRecord {

@@ -14,7 +14,7 @@ export const initialProducts: Product[] = [
   {
     id: 'prod-1',
     barcode: 'SQ001',
-    name: 'SOlo',
+    name: 'SOlo Shirt',
     category: 'SHIRT',
     unit: 'ထည်',
     buyPrice: 20000,
@@ -25,6 +25,7 @@ export const initialProducts: Product[] = [
     minStockLevel: 10,
     store: 'Main Store',
     supplier: 'Royal Supply',
+    imageUrl: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=300&auto=format&fit=crop&q=80',
   },
   {
     id: 'prod-2',
@@ -40,11 +41,12 @@ export const initialProducts: Product[] = [
     minStockLevel: 5,
     store: 'Main Store',
     supplier: 'Uniqlo Hub',
+    imageUrl: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=300&auto=format&fit=crop&q=80',
   },
   {
     id: 'prod-3',
     barcode: 'AS003',
-    name: 'D2',
+    name: 'D2 Denim Shirt',
     category: 'SHIRT',
     unit: 'ထည်',
     buyPrice: 30000,
@@ -55,6 +57,7 @@ export const initialProducts: Product[] = [
     minStockLevel: 15,
     store: 'Main Store',
     supplier: 'Apex Fashion',
+    imageUrl: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=300&auto=format&fit=crop&q=80',
   },
   {
     id: 'prod-4',
@@ -70,6 +73,7 @@ export const initialProducts: Product[] = [
     minStockLevel: 100,
     store: 'Main Store',
     supplier: 'Card Tech',
+    imageUrl: 'https://images.unsplash.com/photo-1556742049-0a67e55722c0?w=300&auto=format&fit=crop&q=80',
   },
   {
     id: 'prod-5',
@@ -85,6 +89,7 @@ export const initialProducts: Product[] = [
     minStockLevel: 5,
     store: 'Main Store',
     supplier: 'Zara Direct',
+    imageUrl: 'https://images.unsplash.com/photo-1542272604-780c96856592?w=300&auto=format&fit=crop&q=80',
   },
   {
     id: 'prod-6',
@@ -100,6 +105,7 @@ export const initialProducts: Product[] = [
     minStockLevel: 10,
     store: 'Main Store',
     supplier: 'Apex Fashion',
+    imageUrl: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=300&auto=format&fit=crop&q=80',
   },
 ];
 

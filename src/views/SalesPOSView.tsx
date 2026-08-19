@@ -23,6 +23,7 @@ import {
   ShoppingCart,
   Receipt,
   Sparkles,
+  Package,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Product, CartItem, SaleType, PaymentMethod } from '../types';
@@ -91,7 +92,11 @@ export const SalesPOSView: React.FC = () => {
     }, 1800);
   };
 
-  const handleAddToCart = (product: Product, priceType: SaleType = 'လက်လီ') => {
+  const handleAddToCart = (
+    product: Product,
+    priceType: SaleType = 'လက်လီ',
+    qtyToAdd: number = 1
+  ) => {
     let unitPrice = product.retailPrice;
     if (priceType === 'လက်ကား ၁') unitPrice = product.wholesalePrice1;
     if (priceType === 'လက်ကား ၂') unitPrice = product.wholesalePrice2;
@@ -102,11 +107,11 @@ export const SalesPOSView: React.FC = () => {
       );
       if (existingIdx !== -1) {
         const updated = [...prev];
-        const newQty = updated[existingIdx].qty + 1;
+        const newQty = updated[existingIdx].qty + qtyToAdd;
         updated[existingIdx] = {
           ...updated[existingIdx],
           qty: newQty,
-          total: newQty * updated[existingIdx].unitPrice - updated[existingIdx].discount,
+          total: Math.max(0, newQty * updated[existingIdx].unitPrice - updated[existingIdx].discount),
         };
         return updated;
       } else {
@@ -114,17 +119,17 @@ export const SalesPOSView: React.FC = () => {
           ...prev,
           {
             product,
-            qty: 1,
+            qty: qtyToAdd,
             selectedPriceType: priceType,
             unitPrice,
             discount: 0,
-            total: unitPrice,
+            total: Math.max(0, qtyToAdd * unitPrice),
           },
         ];
       }
     });
 
-    showToast(`"${product.name}" ခြင်းတောင်းထဲ ထည့်ပြီးပါပြီ`);
+    showToast(`"${product.name}" (${qtyToAdd} ${product.unit} - ${priceType}) ထည့်ပြီးပါပြီ`);
   };
 
   // Instant 1-Click Sell for a specific single product
@@ -480,65 +485,110 @@ export const SalesPOSView: React.FC = () => {
                 {/* Product Info (Clicking info adds to cart) */}
                 <div
                   onClick={() => handleAddToCart(prod, 'လက်လီ')}
-                  className="cursor-pointer"
+                  className="cursor-pointer flex-1 flex flex-col justify-between"
                 >
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="text-[9px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-mono">
-                      {prod.barcode}
-                    </span>
-                    <span
-                      className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${
-                        prod.stockQty > 5
-                          ? 'bg-green-100 text-green-700'
-                          : prod.stockQty > 0
-                          ? 'bg-amber-100 text-amber-700'
-                          : 'bg-red-100 text-red-700'
-                      }`}
-                    >
-                      {prod.stockQty} {prod.unit}
-                    </span>
+                  <div>
+                    {/* Top Bar: Barcode and Stock */}
+                    <div className="flex justify-between items-start mb-1.5">
+                      <span className="text-[9px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-mono">
+                        {prod.barcode}
+                      </span>
+                      <span
+                        className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${
+                          prod.stockQty > 5
+                            ? 'bg-green-100 text-green-700'
+                            : prod.stockQty > 0
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'bg-red-100 text-red-700'
+                        }`}
+                      >
+                        {prod.stockQty} {prod.unit}
+                      </span>
+                    </div>
+
+                    {/* Product Image Thumbnail */}
+                    {prod.imageUrl ? (
+                      <div className="w-full h-24 sm:h-28 bg-gray-50 rounded-lg overflow-hidden mb-1.5 border border-gray-100">
+                        <img
+                          src={prod.imageUrl}
+                          alt={prod.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-full h-16 sm:h-20 bg-gray-50 rounded-lg flex items-center justify-center mb-1.5 border border-dashed border-gray-200 text-gray-300">
+                        <Package className="w-6 h-6" />
+                      </div>
+                    )}
+
+                    <h4 className="font-bold text-xs text-gray-900 line-clamp-2 group-hover:text-[#ff6600]">
+                      {prod.name}
+                    </h4>
+                    <div className="text-[10px] text-gray-400 mt-0.5">{prod.category}</div>
                   </div>
 
-                  <h4 className="font-bold text-xs text-gray-900 line-clamp-2 group-hover:text-[#ff6600] mt-0.5">
-                    {prod.name}
-                  </h4>
-                  <div className="text-[10px] text-gray-400 mt-0.5">{prod.category}</div>
-
-                  <div className="mt-2 flex items-baseline justify-between">
-                    <div>
-                      <div className="text-[9px] text-gray-400">လက်လီဈေး</div>
+                  {/* Prices Overview */}
+                  <div className="mt-2 space-y-1">
+                    <div className="flex items-baseline justify-between">
+                      <div className="text-[10px] text-gray-500 font-medium">လက်လီဈေး:</div>
                       <div className="font-bold text-xs sm:text-sm text-gray-900 font-mono">
                         {prod.retailPrice.toLocaleString()} Ks
                       </div>
                     </div>
 
-                    {inCartQty > 0 && (
-                      <span className="bg-[#ff6600] text-white font-bold text-xs px-2 py-0.5 rounded-full shadow-xs">
-                        {inCartQty} ခု
-                      </span>
-                    )}
+                    <div className="flex items-center justify-between text-[10px] text-blue-700 bg-blue-50/70 px-1.5 py-0.5 rounded">
+                      <span>လက်ကား ၁ (5 ထည်+):</span>
+                      <span className="font-mono font-bold">{prod.wholesalePrice1.toLocaleString()} Ks</span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10px] text-purple-700 bg-purple-50/70 px-1.5 py-0.5 rounded">
+                      <span>လက်ကား ၂ (10 ထည်+):</span>
+                      <span className="font-mono font-bold">{prod.wholesalePrice2.toLocaleString()} Ks</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Direct Action Buttons on Card */}
-                <div className="mt-2.5 pt-2 border-t border-gray-100 grid grid-cols-2 gap-1.5">
-                  <button
-                    onClick={() => handleAddToCart(prod, 'လက်လီ')}
-                    className="py-1.5 px-2 bg-orange-50 hover:bg-orange-100 text-[#ff6600] font-bold text-[11px] rounded-lg flex items-center justify-center space-x-1 cursor-pointer transition-colors active:scale-95"
-                    title="ခြင်းတောင်းထဲ ထည့်မည်"
-                  >
-                    <Plus className="w-3 h-3" />
-                    <span>ထည့်မည်</span>
-                  </button>
+                {/* Direct Action Buttons on Card (Retail & Wholesale 5/10 pcs) */}
+                <div className="mt-2.5 pt-2 border-t border-gray-100 space-y-1.5">
+                  <div className="grid grid-cols-2 gap-1">
+                    <button
+                      onClick={() => handleAddToCart(prod, 'လက်လီ', 1)}
+                      className="py-1 px-1.5 bg-orange-50 hover:bg-orange-100 text-[#ff6600] font-bold text-[10px] sm:text-[11px] rounded-lg flex items-center justify-center space-x-1 cursor-pointer transition-colors active:scale-95"
+                      title="လက်လီ ၁ ထည် ထည့်မည်"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>+1 လက်လီ</span>
+                    </button>
 
-                  <button
-                    onClick={() => handleDirectSingleProductSale(prod)}
-                    className="py-1.5 px-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] rounded-lg flex items-center justify-center space-x-1 cursor-pointer transition-colors shadow-xs active:scale-95"
-                    title="၁ ချက်နှိပ်ပြီး ချက်ချင်းရောင်းမည်"
-                  >
-                    <Zap className="w-3 h-3" />
-                    <span>ရောင်းမည်</span>
-                  </button>
+                    <button
+                      onClick={() => handleDirectSingleProductSale(prod)}
+                      className="py-1 px-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] sm:text-[11px] rounded-lg flex items-center justify-center space-x-1 cursor-pointer transition-colors shadow-xs active:scale-95"
+                      title="၁ ချက်နှိပ်ပြီး ချက်ချင်းရောင်းမည်"
+                    >
+                      <Zap className="w-3 h-3" />
+                      <span>ရောင်းမည်</span>
+                    </button>
+                  </div>
+
+                  {/* Quick Wholesale 5 / 10 Add Buttons */}
+                  <div className="grid grid-cols-2 gap-1">
+                    <button
+                      onClick={() => handleAddToCart(prod, 'လက်ကား ၁', 5)}
+                      className="py-1 px-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[10px] rounded-lg flex items-center justify-center space-x-0.5 cursor-pointer transition-colors active:scale-95 border border-blue-200"
+                      title="လက်ကား ၁ ဈေးဖြင့် ၅ ထည် ထည့်မည်"
+                    >
+                      <span>+5 ထည် (ကား၁)</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleAddToCart(prod, 'လက်ကား ၂', 10)}
+                      className="py-1 px-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-[10px] rounded-lg flex items-center justify-center space-x-0.5 cursor-pointer transition-colors active:scale-95 border border-purple-200"
+                      title="လက်ကား ၂ ဈေးဖြင့် ၁၀ ထည် ထည့်မည်"
+                    >
+                      <span>+10 ထည် (ကား၂)</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -660,9 +710,23 @@ export const SalesPOSView: React.FC = () => {
                 className="bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs space-y-2 shadow-2xs"
               >
                 <div className="flex justify-between items-start">
-                  <div>
-                    <div className="font-bold text-gray-900 text-xs">{item.product.name}</div>
-                    <div className="text-[10px] text-gray-500 font-mono">{item.product.barcode}</div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-9 h-9 rounded-lg bg-white border border-gray-200 overflow-hidden flex items-center justify-center shrink-0">
+                      {item.product.imageUrl ? (
+                        <img
+                          src={item.product.imageUrl}
+                          alt={item.product.name}
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <Package className="w-4 h-4 text-gray-400" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-bold text-gray-900 text-xs">{item.product.name}</div>
+                      <div className="text-[10px] text-gray-500 font-mono">{item.product.barcode}</div>
+                    </div>
                   </div>
                   <button
                     onClick={() => removeFromCart(idx)}
@@ -673,47 +737,95 @@ export const SalesPOSView: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Price Type & Unit Price */}
-                <div className="flex items-center justify-between text-[11px] bg-white p-1.5 rounded-lg border border-gray-200">
-                  <div className="flex items-center space-x-1">
-                    <span className="text-[10px] text-gray-500">ဈေးနှုန်း:</span>
-                    <select
-                      value={item.selectedPriceType}
-                      onChange={(e) => updatePriceType(idx, e.target.value as SaleType)}
-                      className="bg-gray-50 border border-gray-300 rounded px-1.5 py-0.5 text-gray-800 text-[11px] font-semibold focus:outline-none"
-                    >
-                      <option value="လက်လီ">လက်လီ</option>
-                      <option value="လက်ကား ၁">လက်ကား ၁</option>
-                      <option value="လက်ကား ၂">လက်ကား ၂</option>
-                    </select>
+                {/* Price Type & Unit Price & Wholesale Quick Suggestion */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-[11px] bg-white p-1.5 rounded-lg border border-gray-200">
+                    <div className="flex items-center space-x-1">
+                      <span className="text-[10px] text-gray-500 font-medium">ဈေးနှုန်း:</span>
+                      <select
+                        value={item.selectedPriceType}
+                        onChange={(e) => updatePriceType(idx, e.target.value as SaleType)}
+                        className="bg-gray-50 border border-gray-300 rounded px-1.5 py-0.5 text-gray-800 text-[11px] font-semibold focus:outline-none"
+                      >
+                        <option value="လက်လီ">လက်လီ ({item.product.retailPrice.toLocaleString()})</option>
+                        <option value="လက်ကား ၁">လက်ကား ၁ ({item.product.wholesalePrice1.toLocaleString()})</option>
+                        <option value="လက်ကား ၂">လက်ကား ၂ ({item.product.wholesalePrice2.toLocaleString()})</option>
+                      </select>
+                    </div>
+                    <span className="font-mono font-bold text-gray-900">
+                      {item.unitPrice.toLocaleString()} Ks
+                    </span>
                   </div>
-                  <span className="font-mono font-bold text-gray-900">
-                    {item.unitPrice.toLocaleString()} Ks
-                  </span>
+
+                  {/* Smart Wholesale Suggestion Chip if Qty matches wholesale thresholds */}
+                  {item.qty >= 10 && item.selectedPriceType !== 'လက်ကား ၂' && (
+                    <button
+                      type="button"
+                      onClick={() => updatePriceType(idx, 'လက်ကား ၂')}
+                      className="w-full text-[10px] bg-purple-100 hover:bg-purple-200 text-purple-900 font-bold py-1 px-2 rounded-md flex items-center justify-between cursor-pointer transition-colors"
+                    >
+                      <span>💡 ၁၀ ထည် ပြည့်ပါပြီ - "လက်ကား ၂" ဈေး သို့ ပြောင်းမည်</span>
+                      <span className="underline">ပြောင်းရန် နှိပ်ပါ</span>
+                    </button>
+                  )}
+
+                  {item.qty >= 5 && item.qty < 10 && item.selectedPriceType === 'လက်လီ' && (
+                    <button
+                      type="button"
+                      onClick={() => updatePriceType(idx, 'လက်ကား ၁')}
+                      className="w-full text-[10px] bg-blue-100 hover:bg-blue-200 text-blue-900 font-bold py-1 px-2 rounded-md flex items-center justify-between cursor-pointer transition-colors"
+                    >
+                      <span>💡 ၅ ထည် ပြည့်ပါပြီ - "လက်ကား ၁" ဈေး သို့ ပြောင်းမည်</span>
+                      <span className="underline">ပြောင်းရန် နှိပ်ပါ</span>
+                    </button>
+                  )}
                 </div>
 
-                {/* Qty & Discount & Subtotal */}
+                {/* Qty & Steppers & Discount & Subtotal */}
                 <div className="flex items-center justify-between pt-1 border-t border-gray-200">
-                  {/* Qty Controls */}
-                  <div className="flex items-center space-x-1 bg-white border border-gray-300 rounded-lg p-0.5">
+                  {/* Qty Controls with +5, +10 quick buttons */}
+                  <div className="flex items-center space-x-1">
+                    <div className="flex items-center bg-white border border-gray-300 rounded-lg p-0.5 shadow-2xs">
+                      <button
+                        onClick={() => updateCartQty(idx, item.qty - 1)}
+                        className="w-6 h-6 flex items-center justify-center text-gray-700 hover:bg-gray-100 rounded cursor-pointer font-bold"
+                        title="၁ ခု လျှော့မည်"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </button>
+                      <input
+                        type="number"
+                        min="1"
+                        value={item.qty}
+                        onChange={(e) => updateCartQty(idx, parseFloat(e.target.value) || 1)}
+                        className="w-10 text-center font-mono font-bold text-xs bg-transparent focus:outline-none"
+                        title="အရေအတွက် စိတ်ကြိုက်ပြင်ရေးရန်"
+                      />
+                      <button
+                        onClick={() => updateCartQty(idx, item.qty + 1)}
+                        className="w-6 h-6 flex items-center justify-center text-gray-700 hover:bg-gray-100 rounded cursor-pointer font-bold"
+                        title="၁ ခု တိုးမည်"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </button>
+                    </div>
+
+                    {/* Wholesale Stepper Buttons */}
                     <button
-                      onClick={() => updateCartQty(idx, item.qty - 1)}
-                      className="w-6 h-6 flex items-center justify-center text-gray-700 hover:bg-gray-100 rounded cursor-pointer font-bold"
+                      type="button"
+                      onClick={() => updateCartQty(idx, item.qty + 5)}
+                      className="px-1.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[10px] rounded border border-blue-200 cursor-pointer"
+                      title="၅ ထည် ပေါင်းထည့်မည်"
                     >
-                      <Minus className="w-3 h-3" />
+                      +5
                     </button>
-                    <input
-                      type="number"
-                      min="1"
-                      value={item.qty}
-                      onChange={(e) => updateCartQty(idx, parseFloat(e.target.value) || 1)}
-                      className="w-10 text-center font-mono font-bold text-xs bg-transparent focus:outline-none"
-                    />
                     <button
-                      onClick={() => updateCartQty(idx, item.qty + 1)}
-                      className="w-6 h-6 flex items-center justify-center text-gray-700 hover:bg-gray-100 rounded cursor-pointer font-bold"
+                      type="button"
+                      onClick={() => updateCartQty(idx, item.qty + 10)}
+                      className="px-1.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-[10px] rounded border border-purple-200 cursor-pointer"
+                      title="၁၀ ထည် ပေါင်းထည့်မည်"
                     >
-                      <Plus className="w-3 h-3" />
+                      +10
                     </button>
                   </div>
 
