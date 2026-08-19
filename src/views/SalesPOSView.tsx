@@ -11,6 +11,8 @@ import {
   Printer,
   Check,
   User,
+  UserPlus,
+  Edit3,
   ShoppingBag,
   RotateCcw,
   Camera,
@@ -36,6 +38,7 @@ export const SalesPOSView: React.FC = () => {
     activeStaff,
     selectedStore,
     addMultipleSaleRecords,
+    addCustomer,
     settings,
   } = useApp();
 
@@ -44,6 +47,8 @@ export const SalesPOSView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
+  const [customCustomerName, setCustomCustomerName] = useState<string>('');
+  const [saveNewCustomerPrompt, setSaveNewCustomerPrompt] = useState<boolean>(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<'catalog' | 'cart'>('catalog');
@@ -269,7 +274,35 @@ export const SalesPOSView: React.FC = () => {
       '0'
     )}${String(today.getDate()).padStart(2, '0')}.${Math.floor(1000 + Math.random() * 9000)}`;
 
-    const selectedCustomer = customers.find((c) => c.id === selectedCustomerId);
+    const matchedCustomer = customers.find(
+      (c) =>
+        c.id === selectedCustomerId ||
+        (customCustomerName.trim() &&
+          c.name.trim().toLowerCase() === customCustomerName.trim().toLowerCase())
+    );
+
+    let finalCustomerId: string | undefined = matchedCustomer
+      ? matchedCustomer.id
+      : selectedCustomerId || undefined;
+
+    let finalCustomerName: string = customCustomerName.trim()
+      ? customCustomerName.trim()
+      : matchedCustomer
+      ? matchedCustomer.name
+      : 'လက်လီဝယ်ယူသူ (General Customer)';
+
+    // If new custom customer name provided and either credit sale or user checked "save new customer"
+    if (!matchedCustomer && customCustomerName.trim() && (saveNewCustomerPrompt || chosenMethod === 'Credit')) {
+      const generatedCustId = 'cust-' + Date.now();
+      addCustomer({
+        name: customCustomerName.trim(),
+        phone: '',
+        address: '',
+        creditBalance: chosenMethod === 'Credit' ? totalAmt : 0,
+        bonusPoints: 0,
+      });
+      finalCustomerId = generatedCustId;
+    }
 
     const saleRecords = itemsToSell.map((item) => {
       const grossProfit =
@@ -291,8 +324,8 @@ export const SalesPOSView: React.FC = () => {
         store: selectedStore,
         cashier: activeStaff?.name || 'Admin',
         paymentMethod: chosenMethod,
-        customerId: selectedCustomerId || undefined,
-        customerName: selectedCustomer ? selectedCustomer.name : undefined,
+        customerId: finalCustomerId,
+        customerName: finalCustomerName,
       };
     });
 
@@ -306,9 +339,7 @@ export const SalesPOSView: React.FC = () => {
       cashTendered: chosenMethod === 'Cash' ? tendered : totalAmt,
       changeAmount:
         chosenMethod === 'Cash' ? Math.max(0, tendered - totalAmt) : 0,
-      customerName: selectedCustomer
-        ? selectedCustomer.name
-        : 'လက်လီဝယ်ယူသူ (General Customer)',
+      customerName: finalCustomerName,
       date: formattedDate,
     });
 
@@ -681,14 +712,73 @@ export const SalesPOSView: React.FC = () => {
         </div>
 
         {/* Customer Selector */}
-        <div className="p-2 bg-gray-50 border-b border-gray-200 shrink-0">
-          <div className="flex items-center space-x-1.5 text-xs">
-            <User className="w-3.5 h-3.5 text-gray-500" />
+        <div className="p-2.5 bg-gray-50 border-b border-gray-200 shrink-0 space-y-1.5">
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center space-x-1 font-semibold text-gray-700">
+              <User className="w-3.5 h-3.5 text-[#ff6600]" />
+              <span>ဝယ်ယူသူ (Customer):</span>
+            </div>
+            {selectedCustomerId ? (
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">
+                ✓ ရွေးချယ်ပြီး
+              </span>
+            ) : customCustomerName.trim() ? (
+              <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded">
+                ✏️ စိတ်ကြိုက်
+              </span>
+            ) : null}
+          </div>
+
+          <div className="space-y-1">
+            {/* Direct custom name text input with datalist */}
+            <div className="relative">
+              <input
+                id="input-cart-customer-name"
+                type="text"
+                list="pos-cart-customers-list"
+                placeholder="ဖောက်သည်အမည် ရိုက်ထည့်ပါ (သို့) ရွေးပါ..."
+                value={customCustomerName}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setCustomCustomerName(val);
+                  const matched = customers.find(
+                    (c) => c.name.trim().toLowerCase() === val.trim().toLowerCase()
+                  );
+                  if (matched) {
+                    setSelectedCustomerId(matched.id);
+                  } else {
+                    setSelectedCustomerId('');
+                  }
+                }}
+                className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-gray-900 placeholder:text-gray-400 font-semibold focus:outline-none focus:border-[#ff6600]"
+              />
+              <datalist id="pos-cart-customers-list">
+                <option value="လက်လီဝယ်ယူသူ (General Retail Customer)" />
+                {customers.map((c) => (
+                  <option key={c.id} value={c.name}>
+                    {c.phone ? `${c.name} (${c.phone})` : c.name}
+                  </option>
+                ))}
+              </datalist>
+            </div>
+
+            {/* Existing Dropdown Selector */}
             <select
+              id="select-cart-customer-dropdown"
               value={selectedCustomerId}
-              onChange={(e) => setSelectedCustomerId(e.target.value)}
-              className="flex-1 bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-[#ff6600]"
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelectedCustomerId(val);
+                if (val) {
+                  const matched = customers.find((c) => c.id === val);
+                  if (matched) setCustomCustomerName(matched.name);
+                } else {
+                  setCustomCustomerName('');
+                }
+              }}
+              className="w-full bg-white border border-gray-200 rounded-lg px-2 py-1 text-[11px] text-gray-700 focus:outline-none focus:border-[#ff6600]"
             >
+              <option value="">-- စာရင်းထဲမှ အမြန်ရွေးမည် (သို့) လက်လီ --</option>
               <option value="">လက်လီဝယ်ယူသူ (General Retail Customer)</option>
               {customers.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -1077,20 +1167,163 @@ export const SalesPOSView: React.FC = () => {
               </div>
 
               {/* Customer Selector inside Modal */}
-              <div>
-                <label className="block font-semibold text-gray-700 mb-1">ဝယ်ယူသူဖောက်သည်:</label>
-                <select
-                  value={selectedCustomerId}
-                  onChange={(e) => setSelectedCustomerId(e.target.value)}
-                  className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-[#ff6600]"
-                >
-                  <option value="">လက်လီဝယ်ယူသူ (General Retail Customer)</option>
-                  {customers.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} {c.creditBalance > 0 ? `(ကြွေးကျန်: ${c.creditBalance.toLocaleString()} Ks)` : ''}
-                    </option>
-                  ))}
-                </select>
+              <div className="space-y-2 bg-gray-50/80 p-3 rounded-xl border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-gray-800 text-xs flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-[#ff6600]" />
+                    <span>ဝယ်ယူသူဖောက်သည် (Customer):</span>
+                  </label>
+                  {selectedCustomerId ? (
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
+                      ✓ စာရင်းသွင်းပြီး
+                    </span>
+                  ) : customCustomerName.trim() ? (
+                    <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full border border-blue-200">
+                      ✏️ စိတ်ကြိုက်အမည်
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-gray-600 bg-gray-200 px-2 py-0.5 rounded-full">
+                      လက်လီဖောက်သည်
+                    </span>
+                  )}
+                </div>
+
+                {/* 1. Direct Text input for custom name & quick search */}
+                <div>
+                  <div className="text-[10px] text-gray-500 font-medium mb-1">
+                    ဖောက်သည်အမည် စိတ်ကြိုက်ရိုက်ထည့်ရန် (သို့) ရှာရန်:
+                  </div>
+                  <input
+                    id="input-modal-customer-name"
+                    type="text"
+                    list="modal-customer-datalist"
+                    placeholder="ဥပမာ- မစုစု၊ ကိုကျော်သူ (သို့) အမည် ရိုက်ထည့်ပါ..."
+                    value={customCustomerName}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setCustomCustomerName(val);
+                      const matched = customers.find(
+                        (c) => c.name.trim().toLowerCase() === val.trim().toLowerCase()
+                      );
+                      if (matched) {
+                        setSelectedCustomerId(matched.id);
+                      } else {
+                        setSelectedCustomerId('');
+                      }
+                    }}
+                    className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs text-gray-900 font-bold placeholder:font-normal placeholder:text-gray-400 focus:outline-none focus:border-[#ff6600] shadow-2xs"
+                  />
+                  <datalist id="modal-customer-datalist">
+                    <option value="လက်လီဝယ်ယူသူ (General Retail Customer)" />
+                    {customers.map((c) => (
+                      <option key={c.id} value={c.name}>
+                        {c.phone ? `${c.name} (${c.phone})` : c.name}
+                      </option>
+                    ))}
+                  </datalist>
+                </div>
+
+                {/* 2. Select from existing dropdown */}
+                <div>
+                  <div className="text-[10px] text-gray-500 font-medium mb-1">
+                    သို့မဟုတ် ရှိပြီးသား ဖောက်သည်စာရင်းထဲမှ ရွေးမည်:
+                  </div>
+                  <select
+                    id="select-modal-customer-dropdown"
+                    value={selectedCustomerId}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSelectedCustomerId(val);
+                      if (val) {
+                        const matched = customers.find((c) => c.id === val);
+                        if (matched) setCustomCustomerName(matched.name);
+                      } else {
+                        setCustomCustomerName('');
+                      }
+                    }}
+                    className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-[#ff6600]"
+                  >
+                    <option value="">-- စာရင်းထဲမှ ရွေးမည် (Select Customer) --</option>
+                    <option value="">လက်လီဝယ်ယူသူ (General Retail Customer)</option>
+                    {customers.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} {c.creditBalance > 0 ? `(ကြွေးကျန်: ${c.creditBalance.toLocaleString()} Ks)` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* 3. Quick Tap Pills */}
+                <div className="flex flex-wrap gap-1 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCustomerId('');
+                      setCustomCustomerName('');
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold cursor-pointer border transition-colors ${
+                      !selectedCustomerId && !customCustomerName
+                        ? 'bg-gray-800 text-white border-gray-800'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                    }`}
+                  >
+                    လက်လီ (General)
+                  </button>
+                  {customers.map((c) => {
+                    const isSelected = selectedCustomerId === c.id || (customCustomerName.trim() && customCustomerName.trim().toLowerCase() === c.name.trim().toLowerCase());
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCustomerId(c.id);
+                          setCustomCustomerName(c.name);
+                        }}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold cursor-pointer border transition-colors truncate max-w-[150px] ${
+                          isSelected
+                            ? 'bg-[#ff6600] text-white border-[#ff6600] shadow-xs'
+                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                        }`}
+                        title={c.name}
+                      >
+                        {c.name}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Info / Balance / Save Prompt */}
+                {(() => {
+                  const currentCustomer = customers.find(
+                    (c) => c.id === selectedCustomerId || (customCustomerName.trim() && c.name.trim().toLowerCase() === customCustomerName.trim().toLowerCase())
+                  );
+                  if (currentCustomer && currentCustomer.creditBalance > 0) {
+                    return (
+                      <div className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2 flex justify-between items-center">
+                        <span className="font-medium">ယခင် ကြွေးကျန်ငွေ:</span>
+                        <span className="font-mono font-bold text-red-600">
+                          {currentCustomer.creditBalance.toLocaleString()} Ks
+                        </span>
+                      </div>
+                    );
+                  }
+                  if (!currentCustomer && customCustomerName.trim()) {
+                    return (
+                      <label className="flex items-center space-x-1.5 text-[11px] text-gray-700 cursor-pointer pt-1 bg-white p-2 rounded-lg border border-gray-200">
+                        <input
+                          type="checkbox"
+                          checked={saveNewCustomerPrompt}
+                          onChange={(e) => setSaveNewCustomerPrompt(e.target.checked)}
+                          className="rounded text-[#ff6600] focus:ring-[#ff6600]"
+                        />
+                        <span>
+                          <strong>"{customCustomerName.trim()}"</strong> ကို ဖောက်သည်စာရင်းထဲသို့ အမြဲတမ်း ထည့်သိမ်းမည်
+                        </span>
+                      </label>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
 
               {paymentMethod === 'Cash' && (
