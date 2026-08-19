@@ -40,6 +40,7 @@ export const SalesPOSView: React.FC = () => {
     addMultipleSaleRecords,
     addCustomer,
     settings,
+    setCurrentTab,
   } = useApp();
 
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -138,17 +139,39 @@ export const SalesPOSView: React.FC = () => {
     showToast(`"${product.name}" (${qtyToAdd} ${product.unit} - ${priceType}) ထည့်ပြီးပါပြီ`);
   };
 
-  // Instant 1-Click Sell for a specific single product
+  // Sell specific single product by opening the Slip / Checkout modal for editing
   const handleDirectSingleProductSale = (product: Product) => {
-    const singleItem: CartItem = {
-      product,
-      qty: 1,
-      selectedPriceType: 'လက်လီ',
-      unitPrice: product.retailPrice,
-      discount: 0,
-      total: product.retailPrice,
-    };
-    executeCustomSale([singleItem], 'Cash', product.retailPrice);
+    let updatedCart = [...cart];
+    const existingIdx = updatedCart.findIndex(
+      (item) => item.product.id === product.id && item.selectedPriceType === 'လက်လီ'
+    );
+
+    if (existingIdx !== -1) {
+      updatedCart[existingIdx] = {
+        ...updatedCart[existingIdx],
+        qty: updatedCart[existingIdx].qty + 1,
+        total: Math.max(
+          0,
+          (updatedCart[existingIdx].qty + 1) * updatedCart[existingIdx].unitPrice -
+            updatedCart[existingIdx].discount
+        ),
+      };
+    } else {
+      updatedCart.push({
+        product,
+        qty: 1,
+        selectedPriceType: 'လက်လီ',
+        unitPrice: product.retailPrice,
+        discount: 0,
+        total: product.retailPrice,
+      });
+    }
+
+    setCart(updatedCart);
+    const newTotal = updatedCart.reduce((sum, it) => sum + it.total, 0);
+    setPaymentMethod('Cash');
+    setCashTendered(newTotal);
+    setPaymentModalOpen(true);
   };
 
   const handleBarcodeSubmit = (e: React.FormEvent) => {
@@ -350,6 +373,11 @@ export const SalesPOSView: React.FC = () => {
   };
 
   const handleConfirmModalSale = () => {
+    if (cart.length === 0) {
+      alert('စလစ်တွင် ပစ္စည်းမရှိတော့ပါ! ကျေးဇူးပြု၍ ပစ္စည်း ရွေးချယ်ပါ။');
+      setPaymentModalOpen(false);
+      return;
+    }
     if (paymentMethod === 'Cash' && cashTendered < totalCartAmount) {
       if (
         !window.confirm(
@@ -378,12 +406,13 @@ export const SalesPOSView: React.FC = () => {
 
   const cashShortcuts = [
     { label: 'Exact (အတိအကျ)', value: totalCartAmount },
-    { label: '1,000', value: 1000 },
-    { label: '5,000', value: 5000 },
     { label: '10,000', value: 10000 },
     { label: '20,000', value: 20000 },
+    { label: '30,000', value: 30000 },
     { label: '50,000', value: 50000 },
     { label: '100,000', value: 100000 },
+    { label: '200,000', value: 200000 },
+    { label: '500,000', value: 500000 },
   ];
 
   return (
@@ -503,142 +532,168 @@ export const SalesPOSView: React.FC = () => {
         </div>
 
         {/* Product Catalog Grid */}
-        <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 pr-0.5 pb-2">
-          {filteredProducts.map((prod) => {
-            const inCartQty = getCartItemQty(prod.id);
-            return (
-              <div
-                key={prod.id}
-                className={`bg-white border rounded-xl p-2.5 flex flex-col justify-between shadow-2xs hover:shadow-md transition-all group relative ${
-                  inCartQty > 0
-                    ? 'border-[#ff6600] ring-2 ring-[#ff6600]/30 bg-orange-50/20'
-                    : 'border-gray-200 hover:border-gray-400'
-                }`}
-              >
-                {/* Product Info (Clicking info adds to cart) */}
-                <div
-                  onClick={() => handleAddToCart(prod, 'လက်လီ')}
-                  className="cursor-pointer flex-1 flex flex-col justify-between"
-                >
-                  <div>
-                    {/* Top Bar: Barcode and Stock */}
-                    <div className="flex justify-between items-start mb-1.5">
-                      <span className="text-[9px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-mono">
-                        {prod.barcode}
-                      </span>
-                      <span
-                        className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${
-                          prod.stockQty > 5
-                            ? 'bg-green-100 text-green-700'
-                            : prod.stockQty > 0
-                            ? 'bg-amber-100 text-amber-700'
-                            : 'bg-red-100 text-red-700'
-                        }`}
-                      >
-                        {prod.stockQty} {prod.unit}
-                      </span>
-                    </div>
-
-                    {/* Product Image Thumbnail */}
-                    {prod.imageUrl ? (
-                      <div className="w-full h-24 sm:h-28 bg-gray-50 rounded-lg overflow-hidden mb-1.5 border border-gray-100">
-                        <img
-                          src={prod.imageUrl}
-                          alt={prod.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                          referrerPolicy="no-referrer"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-full h-16 sm:h-20 bg-gray-50 rounded-lg flex items-center justify-center mb-1.5 border border-dashed border-gray-200 text-gray-300">
-                        <Package className="w-6 h-6" />
-                      </div>
-                    )}
-
-                    <h4 className="font-bold text-xs text-gray-900 line-clamp-2 group-hover:text-[#ff6600]">
-                      {prod.name}
-                    </h4>
-                    <div className="text-[10px] text-gray-400 mt-0.5">{prod.category}</div>
-                  </div>
-
-                  {/* Prices Overview */}
-                  <div className="mt-2 space-y-1">
-                    <div className="flex items-baseline justify-between">
-                      <div className="text-[10px] text-gray-500 font-medium">လက်လီ:</div>
-                      <div className="font-bold text-xs sm:text-sm text-gray-900 font-mono">
-                        {prod.retailPrice.toLocaleString()} Ks
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[10px] text-blue-700 bg-blue-50/70 px-1.5 py-0.5 rounded">
-                      <span>လက်ကား ၅ထည်:</span>
-                      <span className="font-mono font-bold">{prod.wholesalePrice1.toLocaleString()} Ks</span>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[10px] text-purple-700 bg-purple-50/70 px-1.5 py-0.5 rounded">
-                      <span>လက်ကား ၁၀ထည်:</span>
-                      <span className="font-mono font-bold">{prod.wholesalePrice2.toLocaleString()} Ks</span>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[10px] text-emerald-700 bg-emerald-50/70 px-1.5 py-0.5 rounded">
-                      <span>လက်ကား ၂၀ထည်:</span>
-                      <span className="font-mono font-bold">{(prod.wholesalePrice3 || Math.round(prod.wholesalePrice2 * 0.95)).toLocaleString()} Ks</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Direct Action Buttons on Card (Retail & Wholesale 5/10/20 pcs) */}
-                <div className="mt-2.5 pt-2 border-t border-gray-100 space-y-1.5">
-                  <div className="grid grid-cols-2 gap-1">
-                    <button
-                      onClick={() => handleAddToCart(prod, 'လက်လီ', 1)}
-                      className="py-1 px-1.5 bg-orange-50 hover:bg-orange-100 text-[#ff6600] font-bold text-[10px] sm:text-[11px] rounded-lg flex items-center justify-center space-x-1 cursor-pointer transition-colors active:scale-95"
-                      title="လက်လီ ၁ ထည် ထည့်မည်"
-                    >
-                      <Plus className="w-3 h-3" />
-                      <span>+1 လက်လီ</span>
-                    </button>
-
-                    <button
-                      onClick={() => handleDirectSingleProductSale(prod)}
-                      className="py-1 px-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] sm:text-[11px] rounded-lg flex items-center justify-center space-x-1 cursor-pointer transition-colors shadow-xs active:scale-95"
-                      title="၁ ချက်နှိပ်ပြီး ချက်ချင်းရောင်းမည်"
-                    >
-                      <Zap className="w-3 h-3" />
-                      <span>ရောင်းမည်</span>
-                    </button>
-                  </div>
-
-                  {/* Quick Wholesale 5 / 10 / 20 Add Buttons */}
-                  <div className="grid grid-cols-3 gap-1">
-                    <button
-                      onClick={() => handleAddToCart(prod, 'လက်ကား (၅ ထည်)', 5)}
-                      className="py-1 px-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[9px] rounded-lg flex items-center justify-center cursor-pointer transition-colors active:scale-95 border border-blue-200"
-                      title="လက်ကား ၅ ထည် ထည့်မည်"
-                    >
-                      <span>+5 ထည်</span>
-                    </button>
-
-                    <button
-                      onClick={() => handleAddToCart(prod, 'လက်ကား (၁၀ ထည်)', 10)}
-                      className="py-1 px-1 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-[9px] rounded-lg flex items-center justify-center cursor-pointer transition-colors active:scale-95 border border-purple-200"
-                      title="လက်ကား ၁၀ ထည် ထည့်မည်"
-                    >
-                      <span>+10 ထည်</span>
-                    </button>
-
-                    <button
-                      onClick={() => handleAddToCart(prod, 'လက်ကား (၂၀ ထည်)', 20)}
-                      className="py-1 px-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[9px] rounded-lg flex items-center justify-center cursor-pointer transition-colors active:scale-95 border border-emerald-200"
-                      title="လက်ကား ၂၀ ထည် ထည့်မည်"
-                    >
-                      <span>+20 ထည်</span>
-                    </button>
-                  </div>
-                </div>
+        <div className="flex-1 overflow-y-auto pr-0.5 pb-2">
+          {filteredProducts.length === 0 ? (
+            <div className="h-full min-h-[300px] flex flex-col items-center justify-center p-6 text-center bg-gray-50/80 border-2 border-dashed border-gray-200 rounded-2xl">
+              <div className="w-14 h-14 rounded-2xl bg-orange-100 text-[#ff6600] flex items-center justify-center mb-3">
+                <Package className="w-7 h-7" />
               </div>
-            );
-          })}
+              <h3 className="font-bold text-gray-800 text-sm mb-1">
+                {searchTerm ? 'ရှာဖွေမှုနှင့် ကိုက်ညီသော ပစ္စည်းမရှိပါ' : 'ကုန်ပစ္စည်း မရှိသေးပါ'}
+              </h3>
+              <p className="text-xs text-gray-500 max-w-sm mb-4">
+                {searchTerm
+                  ? 'အခြား Barcode သို့မဟုတ် အမည်ဖြင့် ထပ်မံရှာဖွေကြည့်ပါ'
+                  : 'စနစ်ထဲသို့ ဆိုင်ရှိ အဝတ်အထည်နှင့် ကုန်ပစ္စည်းအသစ်များကို ထည့်သွင်းနိုင်ပါပြီ'}
+              </p>
+              <button
+                type="button"
+                onClick={() => setCurrentTab('inventory')}
+                className="px-4 py-2 bg-[#ff6600] hover:bg-[#e65c00] text-white font-bold text-xs rounded-xl shadow-xs flex items-center space-x-1.5 cursor-pointer transition-all active:scale-95"
+              >
+                <Plus className="w-4 h-4" />
+                <span>ကုန်ပစ္စည်းအသစ် ထည့်သွင်းရန်</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+              {filteredProducts.map((prod) => {
+                const inCartQty = getCartItemQty(prod.id);
+                return (
+                  <div
+                    key={prod.id}
+                    className={`bg-white border rounded-xl p-2.5 flex flex-col justify-between shadow-2xs hover:shadow-md transition-all group relative ${
+                      inCartQty > 0
+                        ? 'border-[#ff6600] ring-2 ring-[#ff6600]/30 bg-orange-50/20'
+                        : 'border-gray-200 hover:border-gray-400'
+                    }`}
+                  >
+                    {/* Product Info (Clicking info adds to cart) */}
+                    <div
+                      onClick={() => handleAddToCart(prod, 'လက်လီ')}
+                      className="cursor-pointer flex-1 flex flex-col justify-between"
+                    >
+                      <div>
+                        {/* Top Bar: Barcode and Stock */}
+                        <div className="flex justify-between items-start mb-1.5">
+                          <span className="text-[9px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-mono">
+                            {prod.barcode}
+                          </span>
+                          <span
+                            className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${
+                              prod.stockQty > 5
+                                ? 'bg-green-100 text-green-700'
+                                : prod.stockQty > 0
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-red-100 text-red-700'
+                            }`}
+                          >
+                            {prod.stockQty} {prod.unit}
+                          </span>
+                        </div>
+
+                        {/* Product Image Thumbnail */}
+                        {prod.imageUrl ? (
+                          <div className="w-full h-24 sm:h-28 bg-gray-50 rounded-lg overflow-hidden mb-1.5 border border-gray-100">
+                            <img
+                              src={prod.imageUrl}
+                              alt={prod.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                              referrerPolicy="no-referrer"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-full h-16 sm:h-20 bg-gray-50 rounded-lg flex items-center justify-center mb-1.5 border border-dashed border-gray-200 text-gray-300">
+                            <Package className="w-6 h-6" />
+                          </div>
+                        )}
+
+                        <h4 className="font-bold text-xs text-gray-900 line-clamp-2 group-hover:text-[#ff6600]">
+                          {prod.name}
+                        </h4>
+                        <div className="text-[10px] text-gray-400 mt-0.5">{prod.category}</div>
+                      </div>
+
+                      {/* Prices Overview */}
+                      <div className="mt-2 space-y-1">
+                        <div className="flex items-baseline justify-between">
+                          <div className="text-[10px] text-gray-500 font-medium">လက်လီ:</div>
+                          <div className="font-bold text-xs sm:text-sm text-gray-900 font-mono">
+                            {prod.retailPrice.toLocaleString()} Ks
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] text-blue-700 bg-blue-50/70 px-1.5 py-0.5 rounded">
+                          <span>လက်ကား ၅ထည်:</span>
+                          <span className="font-mono font-bold">{prod.wholesalePrice1.toLocaleString()} Ks</span>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] text-purple-700 bg-purple-50/70 px-1.5 py-0.5 rounded">
+                          <span>လက်ကား ၁၀ထည်:</span>
+                          <span className="font-mono font-bold">{prod.wholesalePrice2.toLocaleString()} Ks</span>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] text-emerald-700 bg-emerald-50/70 px-1.5 py-0.5 rounded">
+                          <span>လက်ကား ၂၀ထည်:</span>
+                          <span className="font-mono font-bold">{(prod.wholesalePrice3 || Math.round(prod.wholesalePrice2 * 0.95)).toLocaleString()} Ks</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Direct Action Buttons on Card (Retail & Wholesale 5/10/20 pcs) */}
+                    <div className="mt-2.5 pt-2 border-t border-gray-100 space-y-1.5">
+                      <div className="grid grid-cols-2 gap-1">
+                        <button
+                          onClick={() => handleAddToCart(prod, 'လက်လီ', 1)}
+                          className="py-1 px-1.5 bg-orange-50 hover:bg-orange-100 text-[#ff6600] font-bold text-[10px] sm:text-[11px] rounded-lg flex items-center justify-center space-x-1 cursor-pointer transition-colors active:scale-95"
+                          title="လက်လီ ၁ ထည် ထည့်မည်"
+                        >
+                          <Plus className="w-3 h-3" />
+                          <span>+1 လက်လီ</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleDirectSingleProductSale(prod)}
+                          className="py-1 px-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] sm:text-[11px] rounded-lg flex items-center justify-center space-x-1 cursor-pointer transition-colors shadow-xs active:scale-95"
+                          title="၁ ချက်နှိပ်ပြီး ချက်ချင်းရောင်းမည်"
+                        >
+                          <Zap className="w-3 h-3" />
+                          <span>ရောင်းမည်</span>
+                        </button>
+                      </div>
+
+                      {/* Quick Wholesale 5 / 10 / 20 Add Buttons */}
+                      <div className="grid grid-cols-3 gap-1">
+                        <button
+                          onClick={() => handleAddToCart(prod, 'လက်ကား (၅ ထည်)', 5)}
+                          className="py-1 px-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[9px] rounded-lg flex items-center justify-center cursor-pointer transition-colors active:scale-95 border border-blue-200"
+                          title="လက်ကား ၅ ထည် ထည့်မည်"
+                        >
+                          <span>+5 ထည်</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleAddToCart(prod, 'လက်ကား (၁၀ ထည်)', 10)}
+                          className="py-1 px-1 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-[9px] rounded-lg flex items-center justify-center cursor-pointer transition-colors active:scale-95 border border-purple-200"
+                          title="လက်ကား ၁၀ ထည် ထည့်မည်"
+                        >
+                          <span>+10 ထည်</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleAddToCart(prod, 'လက်ကား (၂၀ ထည်)', 20)}
+                          className="py-1 px-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[9px] rounded-lg flex items-center justify-center cursor-pointer transition-colors active:scale-95 border border-emerald-200"
+                          title="လက်ကား ၂၀ ထည် ထည့်မည်"
+                        >
+                          <span>+20 ထည်</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Mobile Sticky Floating Cart Bar (When in Catalog Tab) */}
@@ -1164,6 +1219,100 @@ export const SalesPOSView: React.FC = () => {
                 <span className="font-black text-xl md:text-2xl font-mono text-[#ff6600]">
                   {totalCartAmount.toLocaleString()} Ks
                 </span>
+              </div>
+
+              {/* Items in Slip (Editable) */}
+              <div className="space-y-1.5 bg-gray-50/80 p-2.5 rounded-xl border border-gray-200">
+                <div className="flex items-center justify-between text-xs font-bold text-gray-800">
+                  <span className="flex items-center gap-1.5">
+                    <Package className="w-3.5 h-3.5 text-[#ff6600]" />
+                    <span>စလစ်တွင်ပါသော ပစ္စည်းများ ({cart.length} မျိုး):</span>
+                  </span>
+                  <span className="font-mono text-gray-600 text-[11px]">{totalCartQty} ခု</span>
+                </div>
+
+                <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1">
+                  {cart.map((item, idx) => (
+                    <div
+                      key={`${item.product.id}-${item.selectedPriceType}-${idx}`}
+                      className="bg-white p-2 rounded-lg border border-gray-200 text-xs space-y-1.5 shadow-2xs"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-bold text-gray-900 truncate">{item.product.name}</div>
+                          <div className="text-[10px] text-gray-500 flex items-center gap-1.5 flex-wrap">
+                            <span className="font-mono">{item.unitPrice.toLocaleString()} Ks</span>
+                            <span>•</span>
+                            <span className="text-emerald-700 font-medium">လက်ကျန်: {item.product.stockQty}</span>
+                          </div>
+                        </div>
+
+                        {/* Qty Stepper */}
+                        <div className="flex items-center space-x-1 bg-gray-50 border border-gray-200 rounded-md p-0.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => updateCartQty(idx, item.qty - 1)}
+                            className="w-5 h-5 flex items-center justify-center text-gray-600 hover:bg-gray-200 rounded font-bold cursor-pointer"
+                          >
+                            -
+                          </button>
+                          <span className="w-6 text-center font-mono font-bold text-xs">{item.qty}</span>
+                          <button
+                            type="button"
+                            onClick={() => updateCartQty(idx, item.qty + 1)}
+                            className="w-5 h-5 flex items-center justify-center text-gray-600 hover:bg-gray-200 rounded font-bold cursor-pointer"
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        {/* Line Total */}
+                        <div className="text-right shrink-0 min-w-[70px]">
+                          <div className="font-mono font-bold text-[#ff6600] text-xs">
+                            {item.total.toLocaleString()} Ks
+                          </div>
+                        </div>
+
+                        {/* Delete Button */}
+                        <button
+                          type="button"
+                          onClick={() => removeFromCart(idx)}
+                          className="text-gray-400 hover:text-red-500 p-1 cursor-pointer"
+                          title="ဖျက်ရန်"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      {/* Price Type & Discount selectors in slip */}
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-gray-100 text-[10px]">
+                        <select
+                          value={item.selectedPriceType}
+                          onChange={(e) => updatePriceType(idx, e.target.value as SaleType)}
+                          className="bg-gray-50 border border-gray-200 rounded px-1.5 py-0.5 text-[10px] text-gray-700 focus:outline-none"
+                        >
+                          <option value="လက်လီ">လက်လီ ({item.product.retailPrice.toLocaleString()} Ks)</option>
+                          <option value="လက်ကား (၅ ထည်)">လက်ကား ၅ ({item.product.wholesalePrice1.toLocaleString()} Ks)</option>
+                          <option value="လက်ကား (၁၀ ထည်)">လက်ကား ၁၀ ({item.product.wholesalePrice2.toLocaleString()} Ks)</option>
+                          {item.product.wholesalePrice3 && (
+                            <option value="လက်ကား (၂၀ ထည်)">လက်ကား ၂၀ ({item.product.wholesalePrice3.toLocaleString()} Ks)</option>
+                          )}
+                        </select>
+
+                        <div className="flex items-center space-x-1">
+                          <span className="text-gray-500">လျှော့ငွေ:</span>
+                          <input
+                            type="number"
+                            value={item.discount || ''}
+                            onChange={(e) => updateDiscount(idx, parseFloat(e.target.value) || 0)}
+                            placeholder="0"
+                            className="w-16 bg-gray-50 border border-gray-200 rounded px-1 py-0.5 text-right font-mono text-[10px] focus:outline-none focus:border-[#ff6600]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Customer Selector inside Modal */}

@@ -123,19 +123,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const isRemoteUpdating = useRef(false);
   const autoSaveTimeoutRef = useRef<any>(null);
 
+  // Ensure previous mock data is cleaned if user requested clean slate for real business records
+  if (typeof window !== 'undefined') {
+    const isCleanSlateDone = localStorage.getItem('pos_clean_slate_v2') === 'true';
+    if (!isCleanSlateDone) {
+      localStorage.removeItem('pos_products');
+      localStorage.removeItem('pos_sales');
+      localStorage.removeItem('pos_purchases');
+      localStorage.removeItem('pos_incomes');
+      localStorage.removeItem('pos_expenses');
+      localStorage.removeItem('pos_customers');
+      localStorage.removeItem('pos_suppliers');
+      localStorage.setItem('pos_clean_slate_v2', 'true');
+    }
+  }
+
   // Storage initialization
   const [products, setProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem('pos_products');
     if (saved) {
       try {
         const parsed: Product[] = JSON.parse(saved);
-        // Ensure default images and wholesalePrice3 are backfilled if missing
-        return parsed.map((p) => {
-          const initialMatch = initialProducts.find((ip) => ip.barcode === p.barcode);
-          const imageUrl = p.imageUrl || initialMatch?.imageUrl || '';
-          const wholesalePrice3 = p.wholesalePrice3 ?? initialMatch?.wholesalePrice3 ?? (p.wholesalePrice2 ? Math.round(p.wholesalePrice2 * 0.98) : p.wholesalePrice1);
-          return { ...p, imageUrl, wholesalePrice3 };
-        });
+        return parsed;
       } catch (e) {
         return initialProducts;
       }
