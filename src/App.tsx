@@ -7,7 +7,6 @@ import React, { useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
-import { BottomBanner } from './components/BottomBanner';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { MobileDrawer } from './components/MobileDrawer';
 import { ReportsView } from './views/ReportsView';
@@ -66,9 +65,6 @@ const AppContent: React.FC = () => {
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
           {renderActiveView()}
         </main>
-
-        {/* Bottom Support Banner on Desktop */}
-        <BottomBanner />
 
         {/* Mobile Bottom Navigation */}
         <MobileBottomNav onOpenMenu={() => setMobileDrawerOpen(true)} />

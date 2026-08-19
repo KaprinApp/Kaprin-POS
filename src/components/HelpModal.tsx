@@ -1,5 +1,5 @@
 import React from 'react';
-import { HelpCircle, X, PhoneCall, Keyboard, FileText, CheckCircle } from 'lucide-react';
+import { X, Keyboard } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export const HelpModal: React.FC = () => {
@@ -27,41 +27,28 @@ export const HelpModal: React.FC = () => {
 
         <div className="space-y-4 text-xs max-h-[70vh] overflow-y-auto pr-1">
           {/* Shortcuts */}
-          <div className="bg-gray-50 p-3 rounded border border-gray-200 space-y-2">
+          <div className="bg-gray-50 p-3 rounded-xl border border-gray-200 space-y-2">
             <h4 className="font-bold text-gray-900 flex items-center gap-1.5">
               <Keyboard className="w-4 h-4 text-[#ff6600]" />
               <span>အဓိက ကဏ္ဍများနှင့် အသုံးပြုမှုများ:</span>
             </h4>
-            <div className="grid grid-cols-2 gap-2 text-[11px]">
-              <div>
-                <span className="font-bold text-gray-800">၁။ အရောင်း (Sales POS):</span> Barcode scan ဖတ်ခြင်း၊ လက်လီ/လက်ကား ရောင်းချခြင်းနှင့် ဘောက်ချာ ထုတ်ပေးခြင်း။
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-[11px] pt-1">
+              <div className="p-2 bg-white rounded-lg border border-gray-100 shadow-2xs">
+                <span className="font-bold text-gray-900 block mb-0.5">၁။ အရောင်း (Sales POS):</span>
+                <span className="text-gray-600">Barcode scan ဖတ်ခြင်း၊ လက်လီ/လက်ကား ရောင်းချခြင်းနှင့် ဘောက်ချာ ထုတ်ပေးခြင်း။</span>
               </div>
-              <div>
-                <span className="font-bold text-gray-800">၂။ အဝယ် (Purchases):</span> ကုန်ပစ္စည်းအသစ်များ သိုလှောင်ရုံသို့ Stock In သွင်းခြင်း။
+              <div className="p-2 bg-white rounded-lg border border-gray-100 shadow-2xs">
+                <span className="font-bold text-gray-900 block mb-0.5">၂။ အဝယ် (Purchases):</span>
+                <span className="text-gray-600">ကုန်ပစ္စည်းအသစ်များ သိုလှောင်ရုံသို့ Stock In သွင်းခြင်း။</span>
               </div>
-              <div>
-                <span className="font-bold text-gray-800">၃။ စာရင်းချုပ် (Reports):</span> နေ့စဉ် အရောင်းအဝယ်၊ အကြွေးစာရင်း၊ အသုံးစားရိတ်နှင့် အရှုံးအမြတ်များကို Excel/Print ထုတ်ယူခြင်း။
+              <div className="p-2 bg-white rounded-lg border border-gray-100 shadow-2xs">
+                <span className="font-bold text-gray-900 block mb-0.5">၃။ စာရင်းချုပ် (Reports):</span>
+                <span className="text-gray-600">နေ့စဉ် အရောင်းအဝယ်၊ အကြွေးစာရင်း၊ အသုံးစားရိတ်နှင့် အရှုံးအမြတ်များကို Excel/Print ထုတ်ယူခြင်း။</span>
               </div>
-              <div>
-                <span className="font-bold text-gray-800">၄။ ဆိုင်ပိတ်ရန် (Close Day):</span> နေ့စဉ် ငွေစာရင်း ရှင်းတမ်းနှင့် Cashier ရှင်းတမ်း ပိတ်သိမ်းခြင်း။
+              <div className="p-2 bg-white rounded-lg border border-gray-100 shadow-2xs">
+                <span className="font-bold text-gray-900 block mb-0.5">၄။ ဆိုင်ပိတ်ရန် (Close Day):</span>
+                <span className="text-gray-600">နေ့စဉ် ငွေစာရင်း ရှင်းတမ်းနှင့် Cashier ရှင်းတမ်း ပိတ်သိမ်းခြင်း။</span>
               </div>
-            </div>
-          </div>
-
-          {/* Support Info */}
-          <div className="bg-yellow-50 border border-yellow-300 p-3 rounded flex items-center justify-between text-yellow-950">
-            <div>
-              <div className="font-bold text-xs flex items-center gap-1">
-                <PhoneCall className="w-3.5 h-3.5 text-black" />
-                <span>Customer Support Call Center</span>
-              </div>
-              <div className="text-[11px] font-mono font-black text-black text-sm mt-0.5">
-                09-777 335 000
-              </div>
-              <div className="text-[10px] text-yellow-800">ရုံးချိန်: မနက် ၉ နာရီ မှ ညနေ ၆ နာရီအတွင်း</div>
-            </div>
-            <div className="text-right text-[10px] text-yellow-900">
-              POS System Version<br /><span className="font-mono font-bold">v1.0.1.0.5</span>
             </div>
           </div>
         </div>

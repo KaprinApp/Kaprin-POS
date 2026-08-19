@@ -131,29 +131,6 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
                 </button>
               );
             })}
-
-            {/* Supabase Box in Drawer */}
-            <div className="pt-2 border-t border-gray-600">
-              <button
-                onClick={() => {
-                  onClose();
-                  setIsSupabaseModalOpen(true);
-                }}
-                className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold bg-slate-900 text-emerald-400 border border-slate-700 hover:bg-black transition-colors cursor-pointer shadow-xs"
-              >
-                <div className="flex items-center space-x-2.5">
-                  <Database className="w-4 h-4 text-emerald-400" />
-                  <span className="text-white">Supabase Cloud Box</span>
-                </div>
-                <span
-                  className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
-                    isCloudConnected ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
-                  }`}
-                >
-                  {isCloudConnected ? 'Online' : 'Setup'}
-                </span>
-              </button>
-            </div>
           </div>
         </div>
 

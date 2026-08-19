@@ -596,34 +596,25 @@ export const SettingsView: React.FC = () => {
           </div>
         </form>
 
-        {/* SECTION 3: Supabase Cloud Database Integration */}
-        <div className="bg-slate-900 text-white rounded-xl p-4 md:p-5 space-y-4 border border-slate-800 shadow-md">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
-            <div className="flex items-center space-x-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center">
-                <Database className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="flex items-center space-x-2">
-                  <h3 className="font-bold text-sm text-white">Supabase Cloud Database ချိတ်ဆက်မှု</h3>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                    isSupabaseConfigured(supabaseUrl, supabaseAnonKey)
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                      : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                  }`}>
-                    {isSupabaseConfigured(supabaseUrl, supabaseAnonKey) ? 'Configured' : 'Setup Required'}
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-400">
-                  ဆိုင်၏ စာရင်းဒေတာအားလုံးကို Supabase Cloud Database သို့ လုံခြုံစွာ သိမ်းဆည်းရန်
-                </p>
-              </div>
+        {/* SECTION 3: Supabase Cloud Database Integration (Clean & Collapsible) */}
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-200 pb-2">
+            <div className="flex items-center space-x-2">
+              <Database className="w-4 h-4 text-[#ff6600]" />
+              <h3 className="font-bold text-sm text-gray-800">Supabase Cloud Database</h3>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                isSupabaseConfigured(supabaseUrl, supabaseAnonKey)
+                  ? 'bg-emerald-100 text-emerald-800'
+                  : 'bg-amber-100 text-amber-800'
+              }`}>
+                {isSupabaseConfigured(supabaseUrl, supabaseAnonKey) ? 'ချိတ်ဆက်ထားသည်' : 'မချိတ်ဆက်ရသေးပါ'}
+              </span>
             </div>
 
             <button
               type="button"
               onClick={() => setShowSqlSchemaModal(true)}
-              className="text-[11px] text-emerald-400 hover:text-emerald-300 hover:underline flex items-center space-x-1 cursor-pointer self-start sm:self-auto"
+              className="text-[11px] text-[#ff6600] hover:underline flex items-center space-x-1 cursor-pointer"
             >
               <Server className="w-3.5 h-3.5" />
               <span>SQL Schema ကြည့်မည်</span>
@@ -631,17 +622,17 @@ export const SettingsView: React.FC = () => {
           </div>
 
           {supabaseStatusMsg && (
-            <div className={`p-3 rounded-lg text-xs font-semibold flex items-center space-x-2 animate-in fade-in ${
+            <div className={`p-2.5 rounded text-xs font-medium flex items-center space-x-2 ${
               supabaseStatusMsg.type === 'success'
-                ? 'bg-emerald-950/70 border border-emerald-500/40 text-emerald-200'
+                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                 : supabaseStatusMsg.type === 'error'
-                ? 'bg-rose-950/70 border border-rose-500/40 text-rose-200'
-                : 'bg-blue-950/70 border border-blue-500/40 text-blue-200'
+                ? 'bg-rose-50 text-rose-800 border border-rose-200'
+                : 'bg-blue-50 text-blue-800 border border-blue-200'
             }`}>
               {supabaseStatusMsg.type === 'success' ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               ) : (
-                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
               )}
               <span>{supabaseStatusMsg.text}</span>
             </div>
@@ -649,19 +640,19 @@ export const SettingsView: React.FC = () => {
 
           <form onSubmit={handleSaveSupabaseConfig} className="space-y-3 text-xs">
             <div>
-              <label className="block font-semibold mb-1 text-slate-300">Supabase Project URL:</label>
+              <label className="block font-semibold mb-1 text-gray-700">Project URL:</label>
               <input
                 type="text"
                 required
                 value={supabaseUrl}
                 onChange={(e) => setSupabaseUrl(e.target.value)}
                 placeholder="https://YOUR_PROJECT_ID.supabase.co"
-                className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs font-mono text-emerald-400 focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-gray-300 rounded p-2 text-xs font-mono focus:outline-none focus:border-[#ff6600]"
               />
             </div>
 
             <div>
-              <label className="block font-semibold mb-1 text-slate-300">Supabase Anon (Public) Key:</label>
+              <label className="block font-semibold mb-1 text-gray-700">Anon Public Key:</label>
               <div className="relative">
                 <input
                   type={showAnonKey ? 'text' : 'password'}
@@ -669,29 +660,26 @@ export const SettingsView: React.FC = () => {
                   value={supabaseAnonKey}
                   onChange={(e) => setSupabaseAnonKey(e.target.value)}
                   placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 pr-10 text-xs font-mono text-slate-200 focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-white border border-gray-300 rounded p-2 pr-9 text-xs font-mono focus:outline-none focus:border-[#ff6600]"
                 />
                 <button
                   type="button"
                   onClick={() => setShowAnonKey(!showAnonKey)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 cursor-pointer"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
                 >
-                  {showAnonKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showAnonKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                 </button>
               </div>
-              <p className="text-[10px] text-slate-400 mt-1">
-                Supabase Dashboard &gt; Project Settings &gt; API ထဲမှ Project URL နှင့် anon public key ကို ထည့်သွင်းပေးပါ။
-              </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5 pt-2">
+            <div className="flex flex-wrap items-center gap-2 pt-1">
               <button
                 id="btn-save-supabase-config"
                 type="submit"
-                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-lg cursor-pointer flex items-center space-x-1.5 shadow-xs transition-colors"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-1.5 rounded cursor-pointer flex items-center space-x-1 shadow-xs"
               >
                 <Save className="w-3.5 h-3.5" />
-                <span>Save Supabase Config</span>
+                <span>Save</span>
               </button>
 
               <button
@@ -699,10 +687,10 @@ export const SettingsView: React.FC = () => {
                 type="button"
                 disabled={supabaseTesting}
                 onClick={handleTestSupabase}
-                className="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-semibold px-4 py-2 rounded-lg cursor-pointer flex items-center space-x-1.5 transition-colors disabled:opacity-50"
+                className="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded cursor-pointer flex items-center space-x-1 disabled:opacity-50"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${supabaseTesting ? 'animate-spin' : ''}`} />
-                <span>{supabaseTesting ? 'စစ်ဆေးနေပါသည်...' : 'Test Connection (ချိတ်ဆက်မှု စစ်ဆေးမည်)'}</span>
+                <span>{supabaseTesting ? 'စစ်ဆေးနေသည်...' : 'Test Connection'}</span>
               </button>
 
               <button
@@ -710,10 +698,10 @@ export const SettingsView: React.FC = () => {
                 type="button"
                 disabled={isSyncingCloud}
                 onClick={handleSyncToSupabase}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-lg cursor-pointer flex items-center space-x-1.5 shadow-xs transition-colors disabled:opacity-50"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3.5 py-1.5 rounded cursor-pointer flex items-center space-x-1 shadow-xs disabled:opacity-50"
               >
                 <UploadCloud className={`w-3.5 h-3.5 ${isSyncingCloud ? 'animate-bounce' : ''}`} />
-                <span>{isSyncingCloud ? 'Cloud သို့ သိမ်းနေပါသည်...' : 'Sync Data to Cloud (ဒေတာများ Cloud သို့ သိမ်းမည်)'}</span>
+                <span>{isSyncingCloud ? 'သိမ်းနေသည်...' : 'Sync to Cloud'}</span>
               </button>
             </div>
           </form>

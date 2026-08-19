@@ -30,100 +30,17 @@ export const ShopDashboardView: React.FC = () => {
     customers,
     setCurrentTab,
     setReportSubTab,
-    setIsSupabaseModalOpen,
-    syncStatus,
-    isRealtimeActive,
-    lastSyncedTime,
-    triggerManualSync,
   } = useApp();
 
   const totalSalesAmount = sales.reduce((sum, s) => sum + s.totalAmount, 0);
   const totalGrossProfit = sales.reduce((sum, s) => sum + s.grossProfit, 0);
   const lowStockItems = products.filter((p) => p.stockQty <= (p.minStockLevel || 5));
-  const isCloudConnected = isSupabaseConfigured();
-  const config = getActiveSupabaseConfig();
 
   return (
     <div id="shop-dashboard-view" className="flex-1 flex flex-col h-full bg-[#f8f9fa] select-none overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6 pb-20 md:pb-6">
-      {/* SUPABASE CLOUD DATABASE PROMINENT REALTIME BOX */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 md:p-5 text-white shadow-md relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
-          <div className="flex items-start sm:items-center space-x-3">
-            <div className="w-11 h-11 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-inner">
-              <Database className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                <h2 className="font-bold text-base text-white">Supabase Cloud Database & Realtime Auto-Sync</h2>
-                <span
-                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide flex items-center space-x-1 ${
-                    isCloudConnected
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                      : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                  }`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full ${isCloudConnected && isRealtimeActive ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'}`} />
-                  <span>{isCloudConnected ? (isRealtimeActive ? '● Realtime Live Synced' : '● Auto-Sync Ready') : '● Setup Required'}</span>
-                </span>
-              </div>
-              <div className="flex items-center space-x-3 text-xs text-slate-300 mt-1 flex-wrap gap-y-1">
-                <span className="font-mono truncate max-w-xs">
-                  URL: <span className="text-emerald-400 font-bold">{config.url}</span>
-                </span>
-                {lastSyncedTime && (
-                  <span className="text-[11px] text-slate-400 border-l border-slate-700 pl-2.5">
-                    Sync ချိန်: <span className="text-emerald-400 font-mono font-semibold">{lastSyncedTime}</span>
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2 self-stretch sm:self-auto shrink-0">
-            <button
-              id="btn-dash-open-supabase"
-              onClick={() => setIsSupabaseModalOpen(true)}
-              className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl cursor-pointer flex items-center justify-center space-x-1.5 shadow-xs transition-colors"
-            >
-              <Zap className="w-4 h-4 text-emerald-200" />
-              <span>Supabase Box & Status</span>
-            </button>
-
-            <button
-              id="btn-dash-goto-settings"
-              onClick={() => setCurrentTab('setting')}
-              className="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-xs px-3.5 py-2.5 rounded-xl cursor-pointer flex items-center justify-center space-x-1.5 transition-colors"
-              title="Settings ထဲတွင် အသေးစိတ် ကြည့်ရှုရန်"
-            >
-              <Settings className="w-4 h-4" />
-              <span className="hidden sm:inline">Settings</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Feature Pills */}
-        {isCloudConnected && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-800/80 text-[11px] text-slate-300">
-            <div className="flex items-center space-x-1.5 bg-slate-950/50 px-2.5 py-1.5 rounded-lg border border-slate-800">
-              <DownloadCloud className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-              <span>1. အက်ပ်ဖွင့်လျှင် Cloud မှ Auto Fetch ပြုလုပ်သည်</span>
-            </div>
-            <div className="flex items-center space-x-1.5 bg-slate-950/50 px-2.5 py-1.5 rounded-lg border border-slate-800">
-              <UploadCloud className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              <span>2. စာရင်းပြောင်းတိုင်း Background Auto Save ဖြစ်သည်</span>
-            </div>
-            <div className="flex items-center space-x-1.5 bg-slate-950/50 px-2.5 py-1.5 rounded-lg border border-slate-800">
-              <Radio className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-              <span>3. PC / ဖုန်း အချင်းချင်း Realtime တိုက်ရိုက်ချိတ်ဆက်ထားသည်</span>
-            </div>
-          </div>
-        )}
-      </div>
-
-
       {/* Top Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+
         <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-500 font-semibold">ယနေ့ အရောင်းရငွေ (Today Sales)</span>

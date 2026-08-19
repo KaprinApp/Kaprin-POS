@@ -20,9 +20,12 @@ export const IncomeExpenseView: React.FC = () => {
       return;
     }
 
+    const today = new Date();
+    const formattedDate = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}/${today.getFullYear()}`;
+
     if (formType === 'income') {
       addIncomeRecord({
-        date: '08/14/2026',
+        date: formattedDate,
         title,
         category,
         amount,
@@ -32,7 +35,7 @@ export const IncomeExpenseView: React.FC = () => {
       });
     } else {
       addExpenseRecord({
-        date: '08/14/2026',
+        date: formattedDate,
         title,
         category,
         amount,

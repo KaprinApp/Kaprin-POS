@@ -41,11 +41,13 @@ export const PurchaseEntryView: React.FC = () => {
       return;
     }
 
-    const voucherNo = `p.08/14/2026.E.${purchases.length + 1}`;
+    const today = new Date();
+    const formattedDate = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}/${today.getFullYear()}`;
+    const voucherNo = `p.${formattedDate}.E.${purchases.length + 1}`;
     const totalAmount = qty * buyPrice;
 
     addPurchaseRecord({
-      date: '08/14/2026',
+      date: formattedDate,
       voucherNo,
       barcode,
       itemName,
