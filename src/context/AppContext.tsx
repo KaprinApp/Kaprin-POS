@@ -125,7 +125,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Ensure previous mock data is cleaned if user requested clean slate for real business records
   if (typeof window !== 'undefined') {
-    const isCleanSlateDone = localStorage.getItem('pos_clean_slate_v2') === 'true';
+    const isCleanSlateDone = localStorage.getItem('pos_clean_slate_v3') === 'true';
     if (!isCleanSlateDone) {
       localStorage.removeItem('pos_products');
       localStorage.removeItem('pos_sales');
@@ -134,7 +134,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.removeItem('pos_expenses');
       localStorage.removeItem('pos_customers');
       localStorage.removeItem('pos_suppliers');
-      localStorage.setItem('pos_clean_slate_v2', 'true');
+      localStorage.setItem('pos_staff', JSON.stringify(initialStaff));
+      localStorage.setItem('pos_active_staff', JSON.stringify(initialStaff[0]));
+      localStorage.setItem('pos_clean_slate_v3', 'true');
     }
   }
 
@@ -187,6 +189,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (saved) {
       try {
         let parsed: StaffUser[] = JSON.parse(saved);
+        // Clean out any legacy mock cashiers (မေသူ, ကျော်ဇင်)
+        parsed = parsed.filter(
+          (s) =>
+            !s.name.includes('မေသူ') &&
+            !s.name.includes('ကျော်ဇင်') &&
+            !s.id.includes('cashier')
+        );
+
         let hasAdmin = false;
         let hasSuyee = false;
         parsed = parsed.map((s) => {
@@ -355,7 +365,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (Array.isArray(d.expenses)) setExpenses(d.expenses);
           if (Array.isArray(d.customers)) setCustomers(d.customers);
           if (Array.isArray(d.suppliers)) setSuppliers(d.suppliers);
-          if (Array.isArray(d.staff) && d.staff.length > 0) setStaffList(d.staff);
+          if (Array.isArray(d.staff) && d.staff.length > 0) {
+            const filtered = d.staff.filter(
+              (s: StaffUser) =>
+                !s.name.includes('မေသူ') &&
+                !s.name.includes('ကျော်ဇင်') &&
+                !s.id.includes('cashier')
+            );
+            setStaffList(filtered.length > 0 ? filtered : initialStaff);
+          }
           if (d.settings && d.settings.shopName) setSettings(d.settings);
 
           setSyncStatus('synced');
@@ -409,7 +427,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (Array.isArray(remoteData.expenses)) setExpenses(remoteData.expenses);
         if (Array.isArray(remoteData.customers)) setCustomers(remoteData.customers);
         if (Array.isArray(remoteData.suppliers)) setSuppliers(remoteData.suppliers);
-        if (Array.isArray(remoteData.staff) && remoteData.staff.length > 0) setStaffList(remoteData.staff);
+        if (Array.isArray(remoteData.staff) && remoteData.staff.length > 0) {
+          const filtered = remoteData.staff.filter(
+            (s: StaffUser) =>
+              !s.name.includes('မေသူ') &&
+              !s.name.includes('ကျော်ဇင်') &&
+              !s.id.includes('cashier')
+          );
+          setStaffList(filtered.length > 0 ? filtered : initialStaff);
+        }
         if (remoteData.settings && remoteData.settings.shopName) setSettings(remoteData.settings);
 
         setSyncStatus('synced');
@@ -557,7 +583,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (Array.isArray(d.expenses)) setExpenses(d.expenses);
         if (Array.isArray(d.customers)) setCustomers(d.customers);
         if (Array.isArray(d.suppliers)) setSuppliers(d.suppliers);
-        if (Array.isArray(d.staff) && d.staff.length > 0) setStaffList(d.staff);
+        if (Array.isArray(d.staff) && d.staff.length > 0) {
+          const filtered = d.staff.filter(
+            (s: StaffUser) =>
+              !s.name.includes('မေသူ') &&
+              !s.name.includes('ကျော်ဇင်') &&
+              !s.id.includes('cashier')
+          );
+          setStaffList(filtered.length > 0 ? filtered : initialStaff);
+        }
         if (d.settings && d.settings.shopName) setSettings(d.settings);
 
         setSyncStatus('synced');

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Settings,
   Save,
   RotateCcw,
   Download,
+  Upload,
   UploadCloud,
   Check,
   Printer,
@@ -38,20 +39,27 @@ export const SettingsView: React.FC = () => {
   const {
     settings,
     setSettings,
-    resetAllData,
     staffList,
+    setStaffList,
     addStaff,
     updateStaff,
     deleteStaff,
     activeStaff,
     setActiveStaff,
     products,
+    setProducts,
     sales,
+    setSales,
     purchases,
+    setPurchases,
     incomes,
+    setIncomes,
     expenses,
+    setExpenses,
     customers,
+    setCustomers,
     suppliers,
+    setSuppliers,
   } = useApp();
 
   const [formData, setFormData] = useState(settings);
@@ -85,7 +93,6 @@ export const SettingsView: React.FC = () => {
 
   // In-app Delete Confirmation State
   const [staffToDelete, setStaffToDelete] = useState<StaffUser | null>(null);
-  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
 
   const togglePinVisibility = (id: string) => {
     setShowPins((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -216,11 +223,70 @@ export const SettingsView: React.FC = () => {
     a.click();
   };
 
-  const handleConfirmReset = () => {
-    resetAllData();
-    setIsResetModalOpen(false);
-    setStaffActionMsg('မူလနမူနာဒေတာများသို့ အောင်မြင်စွာ ပြန်လည်သတ်မှတ်ပြီးပါပြီ။');
-    setTimeout(() => setStaffActionMsg(''), 4000);
+  const handleImportBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const content = event.target?.result as string;
+        const backup = JSON.parse(content);
+        if (backup.products) {
+          const parsed = typeof backup.products === 'string' ? JSON.parse(backup.products) : backup.products;
+          setProducts(parsed);
+          localStorage.setItem('pos_products', JSON.stringify(parsed));
+        }
+        if (backup.sales) {
+          const parsed = typeof backup.sales === 'string' ? JSON.parse(backup.sales) : backup.sales;
+          setSales(parsed);
+          localStorage.setItem('pos_sales', JSON.stringify(parsed));
+        }
+        if (backup.purchases) {
+          const parsed = typeof backup.purchases === 'string' ? JSON.parse(backup.purchases) : backup.purchases;
+          setPurchases(parsed);
+          localStorage.setItem('pos_purchases', JSON.stringify(parsed));
+        }
+        if (backup.incomes) {
+          const parsed = typeof backup.incomes === 'string' ? JSON.parse(backup.incomes) : backup.incomes;
+          setIncomes(parsed);
+          localStorage.setItem('pos_incomes', JSON.stringify(parsed));
+        }
+        if (backup.expenses) {
+          const parsed = typeof backup.expenses === 'string' ? JSON.parse(backup.expenses) : backup.expenses;
+          setExpenses(parsed);
+          localStorage.setItem('pos_expenses', JSON.stringify(parsed));
+        }
+        if (backup.customers) {
+          const parsed = typeof backup.customers === 'string' ? JSON.parse(backup.customers) : backup.customers;
+          setCustomers(parsed);
+          localStorage.setItem('pos_customers', JSON.stringify(parsed));
+        }
+        if (backup.suppliers) {
+          const parsed = typeof backup.suppliers === 'string' ? JSON.parse(backup.suppliers) : backup.suppliers;
+          setSuppliers(parsed);
+          localStorage.setItem('pos_suppliers', JSON.stringify(parsed));
+        }
+        if (backup.staff) {
+          const parsed = typeof backup.staff === 'string' ? JSON.parse(backup.staff) : backup.staff;
+          setStaffList(parsed);
+          localStorage.setItem('pos_staff', JSON.stringify(parsed));
+        }
+        if (backup.settings) {
+          const parsed = typeof backup.settings === 'string' ? JSON.parse(backup.settings) : backup.settings;
+          setSettings(parsed);
+          setFormData(parsed);
+          localStorage.setItem('pos_settings', JSON.stringify(parsed));
+        }
+        setStaffActionMsg('Database Backup File မှ အချက်အလက်များကို အောင်မြင်စွာ ပြန်လည်ရယူပြီးပါပြီ (Data Restored Successfully)');
+        setTimeout(() => setStaffActionMsg(''), 5000);
+      } catch (err) {
+        setStaffActionError('ရွေးချယ်ထားသော Backup File မှားယွင်းနေပါသည် သို့မဟုတ် ဖတ်၍မရပါ');
+        setTimeout(() => setStaffActionError(''), 5000);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
   // Supabase Handlers
@@ -711,11 +777,11 @@ export const SettingsView: React.FC = () => {
           </form>
         </div>
 
-        {/* SECTION 4: Backup & Reset Section */}
+        {/* SECTION 4: Backup & Restore Section */}
         <div className="pt-6 border-t border-gray-200 space-y-3">
           <h3 className="font-bold text-sm text-gray-800 flex items-center gap-1.5">
             <Shield className="w-4 h-4 text-gray-600" />
-            <span>ဒေတာ ထိန်းသိမ်းမှုနှင့် နမူနာဒေတာ ပြန်လည်သတ်မှတ်ခြင်း</span>
+            <span>ဒေတာ ထိန်းသိမ်းမှု (Database Backup & Restore)</span>
           </h3>
 
           <div className="flex flex-wrap items-center gap-3 text-xs">
@@ -723,21 +789,22 @@ export const SettingsView: React.FC = () => {
               id="btn-export-backup"
               type="button"
               onClick={handleExportBackup}
-              className="bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-800 font-semibold px-4 py-2.5 rounded flex items-center space-x-1.5 cursor-pointer"
+              className="bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-800 font-semibold px-4 py-2.5 rounded flex items-center space-x-1.5 cursor-pointer shadow-2xs transition-colors"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>Export Database Backup (.json)</span>
+              <Download className="w-3.5 h-3.5 text-[#ff6600]" />
+              <span>Export Database Backup (.json ဒေါင်းလုဒ်ဆွဲမည်)</span>
             </button>
 
-            <button
-              id="btn-reset-sample-data"
-              type="button"
-              onClick={() => setIsResetModalOpen(true)}
-              className="bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 font-semibold px-4 py-2.5 rounded flex items-center space-x-1.5 cursor-pointer"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset to Original Sample Data</span>
-            </button>
+            <label className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 font-semibold px-4 py-2.5 rounded flex items-center space-x-1.5 cursor-pointer shadow-2xs transition-colors">
+              <Upload className="w-3.5 h-3.5 text-emerald-700" />
+              <span>Restore Database Backup (.json ပြန်တင်မည်)</span>
+              <input
+                type="file"
+                accept=".json,application/json"
+                onChange={handleImportBackup}
+                className="hidden"
+              />
+            </label>
           </div>
         </div>
       </div>
@@ -942,51 +1009,6 @@ export const SettingsView: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL 3: In-App Reset Confirmation Dialog */}
-      {isResetModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-2xs z-60 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-sm w-full shadow-2xl border border-gray-200 overflow-hidden animate-in zoom-in-95">
-            <div className="bg-red-600 text-white p-4 flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <RotateCcw className="w-5 h-5" />
-                <h3 className="font-bold text-sm">မူလနမူနာဒေတာ ပြန်လည်သတ်မှတ်ခြင်း</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsResetModalOpen(false)}
-                className="text-white/80 hover:text-white p-1 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="p-5 space-y-3 text-xs">
-              <p className="text-gray-700 leading-relaxed font-medium">
-                စနစ်အတွင်းရှိ ပစ္စည်းများ၊ အရောင်းမှတ်တမ်းများနှင့် အကောင့်များအားလုံးကို မူလ Screenshot အတိုင်း ပြန်လည်သတ်မှတ်မည်မှာ သေချာပါသလား?
-              </p>
-
-              <div className="flex justify-end space-x-2 pt-2 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={() => setIsResetModalOpen(false)}
-                  className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold cursor-pointer"
-                >
-                  ပယ်ဖျက်မည်
-                </button>
-                <button
-                  id="btn-confirm-reset-data"
-                  type="button"
-                  onClick={handleConfirmReset}
-                  className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold cursor-pointer flex items-center space-x-1.5 shadow-xs"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>မူလဒေတာ သတ်မှတ်မည်</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
       {/* MODAL 4: Supabase SQL Schema Viewer & Copy Modal */}
       {showSqlSchemaModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-2xs z-60 flex items-center justify-center p-4">

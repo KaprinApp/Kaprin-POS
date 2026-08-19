@@ -11,6 +11,7 @@ export const CloseShopView: React.FC = () => {
     selectedDate,
     selectedStore,
     activeStaff,
+    staffList,
     setCurrentTab,
   } = useApp();
 
@@ -196,24 +197,30 @@ export const CloseShopView: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b hover:bg-gray-50">
-                  <td className="p-2 border text-center">1</td>
-                  <td className="p-2 border font-bold text-gray-900">Admin</td>
-                  <td className="p-2 border">ကောင်တာ ၁</td>
-                  <td className="p-2 border text-right font-mono">236,000</td>
-                  <td className="p-2 border text-right font-mono">130,500</td>
-                  <td className="p-2 border text-right font-mono">40,000</td>
-                  <td className="p-2 border text-right font-mono font-bold text-gray-900">406,500</td>
-                </tr>
-                <tr className="border-b hover:bg-gray-50 text-gray-500">
-                  <td className="p-2 border text-center">2</td>
-                  <td className="p-2 border">မေသူ (Cashier 1)</td>
-                  <td className="p-2 border">ကောင်တာ ၁</td>
-                  <td className="p-2 border text-right font-mono">0</td>
-                  <td className="p-2 border text-right font-mono">0</td>
-                  <td className="p-2 border text-right font-mono">0</td>
-                  <td className="p-2 border text-right font-mono">0</td>
-                </tr>
+                {staffList.map((st, idx) => {
+                  const stCashSales = sales
+                    .filter((s) => s.paymentMethod === 'Cash' && (s.cashierName === st.name || (!s.cashierName && st.name === 'Admin')))
+                    .reduce((sum, s) => sum + s.totalAmount, 0);
+                  const stBankSales = sales
+                    .filter((s) => s.paymentMethod === 'Bank' && (s.cashierName === st.name || (!s.cashierName && st.name === 'Admin')))
+                    .reduce((sum, s) => sum + s.totalAmount, 0);
+                  const stCreditSales = sales
+                    .filter((s) => s.paymentMethod === 'Credit' && (s.cashierName === st.name || (!s.cashierName && st.name === 'Admin')))
+                    .reduce((sum, s) => sum + s.totalAmount, 0);
+                  const stTotal = stCashSales + stBankSales + stCreditSales;
+
+                  return (
+                    <tr key={st.id} className="border-b hover:bg-gray-50">
+                      <td className="p-2 border text-center">{idx + 1}</td>
+                      <td className="p-2 border font-bold text-gray-900">{st.name}</td>
+                      <td className="p-2 border">{st.counter || 'ကောင်တာ ၁'}</td>
+                      <td className="p-2 border text-right font-mono">{stCashSales.toLocaleString()}</td>
+                      <td className="p-2 border text-right font-mono">{stBankSales.toLocaleString()}</td>
+                      <td className="p-2 border text-right font-mono">{stCreditSales.toLocaleString()}</td>
+                      <td className="p-2 border text-right font-mono font-bold text-gray-900">{stTotal.toLocaleString()}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
