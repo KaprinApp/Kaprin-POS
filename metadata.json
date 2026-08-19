@@ -1,6 +1,6 @@
 {
-  "name": "POS & Shop Management System",
-  "description": "A comprehensive Myanmar POS and Inventory Management system featuring sales, purchases, inventory control, income/expense tracking, daily closing, reports, and receipt printing.",
+  "name": "Kaprin Fashion - POS & Shop Management",
+  "description": "Kaprin Fashion POS & Shop Management system featuring sales, purchases, inventory control, income/expense tracking, daily closing, reports, and receipt printing.",
   "requestFramePermissions": ["camera"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

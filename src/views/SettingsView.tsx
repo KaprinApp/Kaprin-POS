@@ -57,6 +57,10 @@ export const SettingsView: React.FC = () => {
   const [formData, setFormData] = useState(settings);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
+  useEffect(() => {
+    setFormData(settings);
+  }, [settings]);
+
   // Supabase Configuration State
   const [supabaseUrl, setSupabaseUrl] = useState(() => getActiveSupabaseConfig().url);
   const [supabaseAnonKey, setSupabaseAnonKey] = useState(() => getActiveSupabaseConfig().anonKey);

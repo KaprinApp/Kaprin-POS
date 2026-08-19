@@ -173,7 +173,7 @@ export const StaffSelectModal: React.FC = () => {
                 </label>
                 {/* PIN Display */}
                 <div className="h-11 bg-gray-100 border border-gray-300 rounded-lg flex items-center justify-center tracking-widest text-2xl font-mono font-bold text-gray-900 px-3">
-                  {pinInput ? '•'.repeat(pinInput.length) : <span className="text-gray-400 text-xs tracking-normal font-sans">PIN Code ထည့်ပါ (Default: 1234)</span>}
+                  {pinInput ? '•'.repeat(pinInput.length) : <span className="text-gray-400 text-xs tracking-normal font-sans">PIN Code ထည့်ပါ (Admin: 9569 / Suyee: 5135)</span>}
                 </div>
               </div>
 

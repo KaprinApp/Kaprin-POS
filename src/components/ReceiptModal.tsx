@@ -128,9 +128,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, onClose }) => 
           </div>
 
           {/* Footer */}
-          <div className="pt-3 text-center space-y-1 font-sans">
+          <div className="pt-3 text-center font-sans">
             <p className="text-[10px] text-gray-600 whitespace-pre-line">{settings.receiptFooter}</p>
-            <p className="text-[9px] text-gray-400 font-mono pt-1">Powered by POS System v1.0.1</p>
           </div>
         </div>
 

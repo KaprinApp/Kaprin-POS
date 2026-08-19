@@ -175,17 +175,97 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [staffList, setStaffList] = useState<StaffUser[]>(() => {
     const saved = localStorage.getItem('pos_staff');
-    return saved ? JSON.parse(saved) : initialStaff;
+    if (saved) {
+      try {
+        let parsed: StaffUser[] = JSON.parse(saved);
+        let hasAdmin = false;
+        let hasSuyee = false;
+        parsed = parsed.map((s) => {
+          if (s.name.toLowerCase() === 'admin') {
+            hasAdmin = true;
+            return { ...s, pin: s.pin === '1234' ? '9569' : s.pin || '9569' };
+          }
+          if (s.name.toLowerCase() === 'suyee') {
+            hasSuyee = true;
+            return { ...s, pin: s.pin || '5135' };
+          }
+          return s;
+        });
+
+        if (!hasAdmin) {
+          parsed.unshift({
+            id: 'staff-1',
+            name: 'Admin',
+            role: 'Shop Owner / Manager',
+            pin: '9569',
+            counter: 'ကောင်တာ ၁',
+            active: true,
+          });
+        }
+        if (!hasSuyee) {
+          parsed.push({
+            id: 'staff-2',
+            name: 'Suyee',
+            role: 'Shop Owner / Manager',
+            pin: '5135',
+            counter: 'ကောင်တာ ၁',
+            active: false,
+          });
+        }
+        return parsed;
+      } catch (e) {
+        return initialStaff;
+      }
+    }
+    return initialStaff;
   });
 
   const [activeStaff, setActiveStaffState] = useState<StaffUser>(() => {
     const saved = localStorage.getItem('pos_active_staff');
-    return saved ? JSON.parse(saved) : initialStaff[0];
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.name?.toLowerCase() === 'admin') {
+          return { ...parsed, pin: '9569' };
+        }
+        if (parsed.name?.toLowerCase() === 'suyee') {
+          return { ...parsed, pin: '5135' };
+        }
+        return parsed;
+      } catch (e) {
+        return initialStaff[0];
+      }
+    }
+    return initialStaff[0];
   });
 
   const [settings, setSettings] = useState<StoreSettings>(() => {
     const saved = localStorage.getItem('pos_settings');
-    return saved ? JSON.parse(saved) : initialSettings;
+    if (saved) {
+      try {
+        const parsed: StoreSettings = JSON.parse(saved);
+        const fixedAddress = (parsed.address || '').replace('ဇူဝံ', 'ဓူဝံ');
+        if (parsed.shopName === 'Golden Star Fashion & Trading' || !parsed.shopName) {
+          return {
+            ...initialSettings,
+            ...parsed,
+            shopName: 'Kaprin Fashion',
+            phone: '09-797485135',
+            address: 'အမှတ်(၂)ရပ်ကွက်၊ဆရာစံလမ်း၊အောင်ပန်းမြို့။(ဓူဝံလက်ဖက်ရည်ဆိုင်အနီး)',
+            receiptHeader: 'Kaprin Fashion မှ လူကြီးမင်းတို့၏ စိတ်တိုင်းကျ ရွေးချယ်ဝယ်ယူမှုအတွက် ကျေးဇူးတင်ပါသည်',
+            receiptFooter: 'ဝယ်ယူပြီးပစ္စည်း ပြန်မလဲပါ\nကျေးဇူးတင်ပါသည် နောက်လည်းကြွပါခင်ဗျာ။',
+            defaultStore: 'Main Store',
+          };
+        }
+        return {
+          ...parsed,
+          address: fixedAddress || 'အမှတ်(၂)ရပ်ကွက်၊ဆရာစံလမ်း၊အောင်ပန်းမြို့။(ဓူဝံလက်ဖက်ရည်ဆိုင်အနီး)',
+        };
+      } catch (e) {
+        return initialSettings;
+      }
+    }
+    return initialSettings;
   });
 
   // Local storage persistence effects
