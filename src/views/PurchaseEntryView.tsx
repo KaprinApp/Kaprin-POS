@@ -17,6 +17,7 @@ import {
 import { useApp } from '../context/AppContext';
 import { PaymentMethod } from '../types';
 import { ProductImagePicker } from '../components/ProductImagePicker';
+import { ShortcutInput } from '../components/ShortcutInput';
 
 export const PurchaseEntryView: React.FC = () => {
   const {
@@ -41,7 +42,6 @@ export const PurchaseEntryView: React.FC = () => {
   const [wholesalePrice2, setWholesalePrice2] = useState<number>(24000);
   const [wholesalePrice3, setWholesalePrice3] = useState<number>(23000);
   const [supplier, setSupplier] = useState(suppliers[0]?.name || 'Royal Supply');
-  const [customSupplier, setCustomSupplier] = useState('');
   const [imageUrl, setImageUrl] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash');
   const [isSuccess, setIsSuccess] = useState(false);
@@ -128,7 +128,7 @@ export const PurchaseEntryView: React.FC = () => {
     ).padStart(2, '0')}/${today.getFullYear()}`;
     const voucherNo = `p.${formattedDate}.E.${purchases.length + 1}`;
     const totalAmount = qty * buyPrice;
-    const finalSupplier = customSupplier.trim() || supplier;
+    const finalSupplier = supplier.trim() || 'Royal Supply';
 
     addPurchaseRecord(
       {
@@ -255,42 +255,16 @@ export const PurchaseEntryView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block font-semibold text-gray-700 mb-1">
-                အမျိုးအစား (Category):
-              </label>
-              <input
-                type="text"
-                required
-                list="category-suggestions"
+              <ShortcutInput
+                label="အမျိုးအစား (Category):"
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                placeholder="SHIRT, Tshirt, card..."
-                className="w-full bg-white border border-gray-300 rounded-lg p-2 focus:outline-none focus:border-[#ff6600]"
+                onChange={(val) => setCategory(val)}
+                storageKey="category"
+                defaultShortcuts={commonCategories}
+                placeholder="Category ရိုက်ပါ..."
+                required
               />
-              <datalist id="category-suggestions">
-                {commonCategories.map((c) => (
-                  <option key={c} value={c} />
-                ))}
-              </datalist>
             </div>
-          </div>
-
-          {/* Category Quick Chips */}
-          <div className="flex items-center space-x-1 overflow-x-auto py-0.5 scrollbar-none">
-            {commonCategories.slice(0, 6).map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setCategory(cat)}
-                className={`text-[10px] px-2 py-0.5 rounded-md transition-colors cursor-pointer ${
-                  category === cat
-                    ? 'bg-gray-800 text-white font-bold'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
           </div>
 
           {/* Product Name (စိတ်ကြိုက် ရေးသားနိုင်ခြင်း) */}
@@ -338,23 +312,15 @@ export const PurchaseEntryView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-semibold text-gray-700 mb-1">
-                  ယူနစ် (Unit):
-                </label>
-                <input
-                  type="text"
-                  required
-                  list="unit-suggestions"
+                <ShortcutInput
+                  label="ယူနစ် (Unit):"
                   value={unit}
-                  onChange={(e) => setUnit(e.target.value)}
-                  placeholder="ထည်, ခု, ဘူး, card..."
-                  className="w-full bg-white border border-gray-300 rounded-lg p-2 focus:outline-none focus:border-[#ff6600]"
+                  onChange={(val) => setUnit(val)}
+                  storageKey="unit"
+                  defaultShortcuts={['ထည်', 'စုံ', 'ခု', 'ထုပ်', 'ကိုက်', 'ဘူး', 'ကတ်']}
+                  placeholder="ယူနစ် ရိုက်ပါ..."
+                  required
                 />
-                <datalist id="unit-suggestions">
-                  {commonUnits.map((u) => (
-                    <option key={u} value={u} />
-                  ))}
-                </datalist>
               </div>
             </div>
 
@@ -462,39 +428,17 @@ export const PurchaseEntryView: React.FC = () => {
           {/* Supplier & Payment Method */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div>
-              <label className="block font-semibold text-gray-700 mb-1">
-                ကုန်သွင်းသူ (Supplier):
-              </label>
-              <div className="space-y-1">
-                <select
-                  value={supplier}
-                  onChange={(e) => {
-                    setSupplier(e.target.value);
-                    if (e.target.value !== '__custom__') {
-                      setCustomSupplier('');
-                    }
-                  }}
-                  className="w-full bg-white border border-gray-300 rounded-lg p-2 text-xs text-gray-800 focus:outline-none focus:border-[#ff6600]"
-                >
-                  {suppliers.map((s) => (
-                    <option key={s.id} value={s.name}>
-                      {s.name}
-                    </option>
-                  ))}
-                  <option value="__custom__">+ စိတ်ကြိုက် ကုန်သွင်းသူအမည် ရေးမည်</option>
-                </select>
-
-                {supplier === '__custom__' && (
-                  <input
-                    type="text"
-                    required
-                    value={customSupplier}
-                    onChange={(e) => setCustomSupplier(e.target.value)}
-                    placeholder="ကုန်သွင်းသူ ကုမ္ပဏီ/ဆိုင် အမည်ရိုက်ပါ..."
-                    className="w-full bg-white border border-gray-300 rounded-lg p-1.5 text-xs focus:outline-none focus:border-[#ff6600] animate-in fade-in"
-                  />
-                )}
-              </div>
+              <ShortcutInput
+                label="ကုန်သွင်းသူ (Supplier):"
+                subLabel="ကီးဘုတ်ဖြင့် စိတ်ကြိုက်ရိုက်ပါ သို့မဟုတ် ဖြတ်လမ်းမှ ရွေးပါ"
+                value={supplier}
+                onChange={(val) => setSupplier(val)}
+                storageKey="supplier"
+                defaultShortcuts={['Royal Supply', 'Fashion Direct', 'BKK Wholesale', 'China Direct', 'Local Wholesale']}
+                extraShortcuts={suppliers.map((s) => s.name)}
+                placeholder="ကုန်သွင်းသူ ကုမ္ပဏီ/ဆိုင် အမည်ရိုက်ပါ..."
+                required
+              />
             </div>
 
             <div>
